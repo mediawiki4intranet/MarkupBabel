@@ -1,4 +1,14 @@
 <?php
+/*
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * @author Stas Fomin <stas-fomin@yandex.ru>
+ * @license http://www.gnu.org/copyleft/gpl.html GNU General Public License 2.0 or later
+ */
+
 class MarkupBabelProcessor
 {
 var $Source='';
@@ -178,13 +188,14 @@ EOT;
         }
         else
         {
-          if ($activedataset=="")
-          {
-              $src_filtered.=$line."\n";
-          }
-          elseif ($activedataset!="" && preg_match( '/^\s*(\d[eEdDqQ\.]*)\s+(\d[eEdDqQ\.]*)\s*(#.*)?/', $line ))
+          $res=preg_match( '/^\s*(\d[\deEdDqQ\-\.]+)\s+(\d[eEdDqQ\.]*)\s*(#.*)?/', $line ); 
+          if ($res && $activedataset!="")
           {
               $datasets[$activedataset]['src'].=$line."\n";
+          }
+          else
+          {
+              $src_filtered.=$line."\n";
           }
         }  
       }
@@ -202,12 +213,20 @@ set output "{$outputpath}.png"
 {$src_filtered}
 EOT;
       file_put_contents($this->Source . ".plt", $str);
-      $cmd="{$this->gnuplotpath}gnuplot <{$this->Source}.plt 2>{$this->Source}.err";
+      $cmd="{$this->gnuplotpath}gnuplot < {$this->Source}.plt  2>{$this->Source}.err";
       $this->myexec($cmd);
-      if ( !file_exists ( "{$this->Source}.png" ) || (filesize("{$this->Source}.png")==0)) {
+      $filename="{$this->Source}.png";
+      usleep(100000);
+      $resexists=file_exists ( "{$this->Source}.png" );
+      if ( !$resexists ) {
          $err=file_get_contents("{$this->Source}.err");
          $str=<<<EOT
 <div class="error">
+$resexists
+<p>
+$filename
+<p>
+$cmd
 {$err}
 </div>
 EOT;
