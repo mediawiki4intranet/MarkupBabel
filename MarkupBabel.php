@@ -12,7 +12,6 @@
 require_once("MarkupBabelProcessor.php");
 require_once('extensions/geshi/geshi.php');
 
-
 function wf_callback_generic($str,$mode)
 {
     global $MarkupBabel;
@@ -22,8 +21,8 @@ function wf_callback_generic($str,$mode)
 function wf_callback_geshi($str,$lang)
 {
     $geshi = new GeSHi($str, $lang);
-    $code=$geshi->parse_code();
-    $code=str_replace("<pre>&nbsp;\n", "<pre>",$code);
+    $code = $geshi->parse_code();
+    $code = str_replace("<pre>&nbsp;\n", "<pre>",$code);
     return $code;
 }
 
@@ -31,117 +30,121 @@ settype($MarkupBabel, 'object');
 $wgExtensionFunctions[] = 'MarkupBabelRegister';
 function MarkupBabelRegister()
 {
-  global $MarkupBabel;
-  $MarkupBabel = new MarkupBabel();
-  $MarkupBabel->register();
+    global $MarkupBabel;
+    $MarkupBabel = new MarkupBabel();
+    $MarkupBabel->register();
 }
 
 class MarkupBabel
 {
-var $BaseDir="";
+    var $BaseDir="";
 
-  function MarkupBabel()
-  {
-      global $IP, $wgScriptPath;
+    function MarkupBabel()
+    {
+        global $IP, $wgScriptPath;
 
-      $this->BaseDir="$IP/images/generated";
-      $this->BaseDir=str_replace("\\","/",$this->BaseDir);
-      $this->BaseURI="$wgScriptPath/images/generated";
-  }
-
-  function register()
-  {
-    global $wgParser;
-    $arr = array (
-          'amsmath'     => 'amsmath',
-          'm'           => 'amsmath',
-          'latex'       => 'latex',
-          'circo'       => 'circo',
-          'circo-print' => 'circo_print',
-          'fdp'         => 'fdp',
-          'fdp-print'   => 'fdp_print',
-          'graphviz'    => 'graph',
-          'graph'       => 'graph',
-          'graph-print' => 'graph_print',
-          'neato'       => 'neato',
-          'neato-print' => 'neato_print',
-          'twopi'       => 'twopi',
-          'twopi-print' => 'twopi_print',
-          'pic-svg'     => 'pic_svg',
-          'pic-svg-gif' => 'pic_svg',
-          'plot'        => 'plot',
-          'hbarchart'   => 'hbarchart',
-          'vbarchart'   => 'vbarchart',
-          'umlet'       => 'umlet',
-          'umlgraph'       => 'umlgraph',
-          'umlsequence' => 'umlsequence',
-    );
-    foreach ($arr as $strKey => $strVal) {
-        $code='return wf_callback_generic($str,"'.$strVal.'");';
-        $wgParser->setHook($strKey, create_function( '$str', $code));
+        $this->BaseDir="$IP/images/generated";
+        $this->BaseDir=str_replace("\\","/",$this->BaseDir);
+        $this->BaseURI="$wgScriptPath/images/generated";
     }
 
-    $langArray = array(
-      "actionscript","ada","apache","asm","asp",
-      "bash","c","c_mac","caddcl","cadlisp","cpp","csharp","css",
-      "delphi","html4strict","java","javascript","lisp","lua",
-      "mpasm","nsis","objc","oobas","oracle8",
-      "pascal","perl","php","php-brief","python",
-      "qbasic","smarty","sql",
-      "vb","vbnet","visualfoxpro",
-      "xml");
-
-      foreach ( $langArray as $lang ){
-          $code='return wf_callback_geshi($str,"'.$lang.'");';
-          $wgParser->setHook('code-'. $lang, create_function( '$str', $code));
-      }
-  }
-
-  function process($strSrc, $strMode)
+    function register()
     {
-      $strHash = md5($strSrc . $strMode);
+        global $wgParser;
+        $arr = array (
+            'amsmath'     => 'amsmath',
+            'm'           => 'amsmath',
+            'latex'       => 'latex',
+            'circo'       => 'circo',
+            'circo-print' => 'circo_print',
+            'fdp'         => 'fdp',
+            'fdp-print'   => 'fdp_print',
+            'graphviz'    => 'graph',
+            'graph'       => 'graph',
+            'graph-print' => 'graph_print',
+            'neato'       => 'neato',
+            'neato-print' => 'neato_print',
+            'twopi'       => 'twopi',
+            'twopi-print' => 'twopi_print',
+            'pic-svg'     => 'pic_svg',
+            'pic-svg-gif' => 'pic_svg',
+            'plot'        => 'plot',
+            'hbarchart'   => 'hbarchart',
+            'vbarchart'   => 'vbarchart',
+            'umlet'       => 'umlet',
+            'umlgraph'       => 'umlgraph',
+            'umlsequence' => 'umlsequence',
+        );
+        foreach ($arr as $strKey => $strVal)
+        {
+            $code = 'return wf_callback_generic($str,"'.$strVal.'");';
+            $wgParser->setHook($strKey, create_function( '$str', $code));
+        }
 
-      $oldumask = umask(0);
-      $strDir   = $this->BaseDir;
-      if ( ! is_dir( $strDir ) ) { mkdir( $strDir, 0777 ); }
-      $strURI   = $this->BaseURI;
+        $langArray = array(
+            "actionscript","ada","apache","asm","asp",
+            "bash","c","c_mac","caddcl","cadlisp","cpp","csharp","css",
+            "delphi","html4strict","java","javascript","lisp","lua",
+            "mpasm","nsis","objc","oobas","oracle8",
+            "pascal","perl","php","php-brief","python",
+            "qbasic","smarty","sql",
+            "vb","vbnet","visualfoxpro",
+            "xml");
 
-      if ( ! is_dir( $strDir ) ) { mkdir( $strDir, 0777 ); }
-      $strDir   .= "/" . $strMode;
-      $strURI   .= "/" . $strMode;
-      if ( ! is_dir( $strDir ) ) { mkdir( $strDir, 0777 ); }
-      $strDir   .= "/" . $strHash{0};
-      $strURI   .= "/" . $strHash{0};
-      if ( ! is_dir( $strDir ) ) { mkdir( $strDir, 0777 ); }
-      $strDir   .= "/" . substr($strHash, 0, 2)  ;
-      $strURI   .= "/" . substr($strHash, 0, 2)  ;
-      if ( ! is_dir( $strDir ) ) { mkdir( $strDir, 0777 ); }
-      $strDir   .= "/" . $strHash  ;
-      $strURI   .= "/" . $strHash  ;
-      if ( ! is_dir( $strDir ) ) { mkdir( $strDir, 0777 ); }
-      umask( $oldumask );
-      $strURI   .= "/";
-      $strLocalFile   =  "{$strMode}.source";
-      $strFile   = $strDir . "/" . $strLocalFile;
+        foreach ($langArray as $lang)
+        {
+            $code = 'return wf_callback_geshi($str,"'.$lang.'");';
+            $wgParser->setHook('code-'. $lang, create_function( '$str', $code));
+        }
+    }
 
-      $obj = fopen($strFile, 'w');
-      if($obj) {
+    function process($strSrc, $strMode)
+    {
+        $strHash = md5($strSrc . $strMode);
+
+        $oldumask = umask(0);
+        $strDir   = $this->BaseDir;
+        if (!is_dir($strDir)) mkdir($strDir, 0777);
+        $strURI   = $this->BaseURI;
+
+        if (!is_dir($strDir)) mkdir($strDir, 0777);
+        $strDir   .= "/" . $strMode;
+        $strURI   .= "/" . $strMode;
+        if (!is_dir($strDir)) mkdir($strDir, 0777);
+        $strDir   .= "/" . $strHash{0};
+        $strURI   .= "/" . $strHash{0};
+        if (!is_dir($strDir)) mkdir($strDir, 0777);
+        $strDir   .= "/" . substr($strHash, 0, 2)  ;
+        $strURI   .= "/" . substr($strHash, 0, 2)  ;
+        if (!is_dir($strDir)) mkdir($strDir, 0777);
+        $strDir   .= "/" . $strHash  ;
+        $strURI   .= "/" . $strHash  ;
+        if (!is_dir($strDir)) mkdir($strDir, 0777);
+        umask($oldumask);
+        $strURI   .= "/";
+        $strLocalFile = "$strMode.source";
+        $strFile   = $strDir . "/" . $strLocalFile;
+
+        if ($obj = fopen($strFile, 'w'))
+        {
             fwrite($obj, $strSrc);
             fclose($obj);
-      }
+        }
 
-      $processor = new MarkupBabelProcessor($strFile, $strMode, $strURI);
-      return $processor->rendme();
+        $processor = new MarkupBabelProcessor($strFile, $strMode, $strURI);
+        return $processor->rendme();
     }
 
     function rebuild_mode($mode)
     {
-        foreach ($this->globr($this->BaseDir."/".$mode,"{$mode}.source") as $file) {
-            $arr=split("/", $file);
-            $basefile=$arr[count($arr)-1];
-            $uri=str_replace($this->BaseDir,$this->BaseURI,$file);
-            $uri=str_replace($basefile,"",$uri);
-            if (file_exists("{$file}.cache")) { unlink("{$file}.cache"); }
+        foreach ($this->globr($this->BaseDir."/".$mode,"{$mode}.source") as $file)
+        {
+            $arr = split("/", $file);
+            $basefile = $arr[count($arr)-1];
+            $uri = str_replace($this->BaseDir,$this->BaseURI,$file);
+            $uri = str_replace($basefile,"",$uri);
+            if (file_exists("{$file}.cache"))
+                unlink("{$file}.cache");
             print "$file\n";
             ob_flush();
             flush();
@@ -152,8 +155,9 @@ var $BaseDir="";
 
     function rebuild_all()
     {
-        foreach (glob($this->BaseDir."/*") as $dir) {
-            $mode=basename($dir);
+        foreach (glob($this->BaseDir."/*") as $dir)
+        {
+            $mode = basename($dir);
             $this->rebuild_mode($mode);
         }
     }
@@ -171,7 +175,5 @@ var $BaseDir="";
         return $aFiles;
     }
 }
-
-
 
 ?>
