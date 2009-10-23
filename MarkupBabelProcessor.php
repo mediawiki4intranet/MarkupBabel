@@ -89,6 +89,7 @@ class MarkupBabelProcessor
         {
             $imageprint = new Imagick("{$this->Source}.print.png");
             $imageprint->trimImage(0);
+            $this->checkImageRes($imageprint);
             $imageprint->writeImage();
 //      $this->myexec("mogrify -trim -type palette -depth 8 -colors 64 -density 192x192 -strip -dither -quality 100 -blur 0x0.4 +antialias {$this->Source}.png");
         }
@@ -104,6 +105,7 @@ class MarkupBabelProcessor
 EOT;
         if ($mode == "print")
         {
+            $this->checkImageRes($imageprint);
             $width = $imageprint->getImageWidth()/2;
             $height = $imageprint->getImageHeight()/2;
             $str = <<<EOT
@@ -113,6 +115,7 @@ EOT;
 </div>
 EOT;
         }
+        $this->checkImageRes($image);
         $image->writeImage();
         return str_replace("\n","",$str);
     }
@@ -208,6 +211,7 @@ EOT;
         $this->myexec("{$this->gnuplotpath}gnuplot {$this->Source}.plt2 2>{$this->Source}.err2");
         $image = new Imagick("{$this->Source}.png");
         $image->trimImage(0);
+        $this->checkImageRes($image);
         $image->writeImage();
         $str = <<<EOT
 <img src="{$this->URI}{$this->Filename}.png">
@@ -223,6 +227,28 @@ EOT;
         return $str;
     }
 
+    /**
+     * Функция проверяет разрешение изображения,
+     * чтобы оно влезало в заданную ширину в дюймах
+     */
+    function checkImageRes($image)
+    {
+        global $egMarkupBabelMaxImageInch;
+        if ($egMarkupBabelMaxImageInch)
+        {
+            $width = $image->getImageWidth();
+            $res = $image->getImageResolution();
+            if (!$res['x'])
+                $res['x'] = 72;
+            if ($width/$res['x'] > $egMarkupBabelMaxImageInch)
+            {
+                $res = $width/$egMarkupBabelMaxImageInch;
+                $image->setImageResolution($res, $res);
+            }
+        }
+        return $image;
+    }
+
     function pic_svg()
     {
         $this->myexec("{$this->inkscapepath}inkscape --without-gui --export-area-drawing --export-plain-svg={$this->Source}.svg {$this->Source}");
@@ -236,6 +262,7 @@ EOT;
         $image->trimImage(0);
         $width = $image->getImageWidth();
         $height = $image->getImageHeight();
+        $this->checkImageRes($image);
         $image->writeImage();
         $str = <<<EOT
 <a href="{$this->URI}{$this->Filename}.svg">
@@ -258,6 +285,7 @@ EOT;
         }
         $image = new Imagick("{$this->Source}.png");
         $image->trimImage(0);
+        $this->checkImageRes($image);
         $image->writeImage();
         $str = "<a href=\"{$this->URI}{$this->Filename}.svg\"><img src=\"{$this->URI}{$this->Filename}.png\"></a>";
         return $str;
@@ -299,6 +327,7 @@ EOT;
         }
         $image = new Imagick("{$this->Source}.png");
         $image->trimImage(0);
+        $this->checkImageRes($image);
         $image->writeImage();
         $str = "<a href=\"{$this->URI}{$this->Filename}.svg\"><img src=\"{$this->URI}{$this->Filename}.png\"></a>";
         return $str;
