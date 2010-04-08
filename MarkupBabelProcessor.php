@@ -101,7 +101,7 @@ class MarkupBabelProcessor
         $str = <<<EOT
 <map name="$mapname">$map</map>
 <img width="$width" height="$height" src="{$this->URI}{$this->Filename}.png" usemap="#{$mapname}"/>
-<a href="{$this->URI}{$this->Filename}.svg">[svg]</a>
+<a class="dotsvg" href="{$this->URI}{$this->Filename}.svg">[svg]</a>
 EOT;
         if ($mode == "print")
         {
