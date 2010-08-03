@@ -79,20 +79,14 @@ class MarkupBabelProcessor
         $this->myexec("{$this->dotpath}$dot -Tpng  -o {$this->Source}.png {$this->Source}");
         if ($mode == "print")
             $this->myexec("{$this->dotpath}$dot -Tpng -Gdpi=196 -o {$this->Source}.print.png {$this->Source}");
-        if (!file_exists ("{$this->Source}.png"))
+        if (!file_exists("{$this->Source}.png"))
         {
             $err = file_get_contents("{$this->Source}.err");
             return "<div class=\"error\">\n$err\n</div>";
         }
         $image = new Imagick("{$this->Source}.png");
         if ($mode == "print")
-        {
-            $imageprint = new Imagick("{$this->Source}.print.png");
-            $imageprint->trimImage(0);
-            $this->checkImageRes($imageprint);
-            $imageprint->writeImage();
-//      $this->myexec("mogrify -trim -type palette -depth 8 -colors 64 -density 192x192 -strip -dither -quality 100 -blur 0x0.4 +antialias {$this->Source}.png");
-        }
+            $imageprint = $this->checkImageFileRes("{$this->Source}.print.png");
 
         $width = $image->getImageWidth();
         $height = $image->getImageHeight();
@@ -116,7 +110,7 @@ EOT;
 EOT;
         }
         $this->checkImageRes($image);
-        $image->writeImage();
+        $image->writeImage("{$this->Source}.png");
         return str_replace("\n","",$str);
     }
 
@@ -209,10 +203,7 @@ set output "{$outputpath}.svg"
 EOT;
         file_put_contents($this->Source . ".plt2", $str);
         $this->myexec("{$this->gnuplotpath}gnuplot {$this->Source}.plt2 2>{$this->Source}.err2");
-        $image = new Imagick("{$this->Source}.png");
-        $image->trimImage(0);
-        $this->checkImageRes($image);
-        $image->writeImage();
+        $this->checkImageFileRes("{$this->Source}.png");
         $str = <<<EOT
 <img src="{$this->URI}{$this->Filename}.png">
 EOT;
@@ -227,11 +218,20 @@ EOT;
         return $str;
     }
 
+    function &checkImageFileRes($filename)
+    {
+        $image = new Imagick($filename);
+        $image->trimImage(0);
+        $this->checkImageRes($image);
+        $image->writeImage($filename);
+        return $image;
+    }
+
     /**
      * Функция проверяет разрешение изображения,
      * чтобы оно влезало в заданную ширину в дюймах
      */
-    function checkImageRes($image)
+    function checkImageRes(&$image)
     {
         global $egMarkupBabelMaxImageInch;
         if ($egMarkupBabelMaxImageInch)
@@ -258,12 +258,9 @@ EOT;
             $err = file_get_contents("{$this->Source}.err");
             return "<div class=\"error\">\n$err\n</div>";
         }
-        $image = new Imagick("{$this->Source}.png");
-        $image->trimImage(0);
+        $image = $this->checkImageFileRes("{$this->Source}.png");
         $width = $image->getImageWidth();
         $height = $image->getImageHeight();
-        $this->checkImageRes($image);
-        $image->writeImage();
         $str = <<<EOT
 <a href="{$this->URI}{$this->Filename}.svg">
 <img width="$width" height="$height" src="{$this->URI}{$this->Filename}.png">
@@ -283,10 +280,7 @@ EOT;
             $err = file_get_contents("{$this->Source}.err");
             return "<div class=\"error\">\n$err\n</div>";
         }
-        $image = new Imagick("{$this->Source}.png");
-        $image->trimImage(0);
-        $this->checkImageRes($image);
-        $image->writeImage();
+        $this->checkImageFileRes("{$this->Source}.png");
         $str = "<a href=\"{$this->URI}{$this->Filename}.svg\"><img src=\"{$this->URI}{$this->Filename}.png\"></a>";
         return $str;
     }
@@ -325,10 +319,7 @@ EOT;
             $err = file_get_contents("{$this->Source}.err");
             return "<div class=\"error\">\n$err\n</div>";
         }
-        $image = new Imagick("{$this->Source}.png");
-        $image->trimImage(0);
-        $this->checkImageRes($image);
-        $image->writeImage();
+        $this->checkImageFileRes("{$this->Source}.png");
         $str = "<a href=\"{$this->URI}{$this->Filename}.svg\"><img src=\"{$this->URI}{$this->Filename}.png\"></a>";
         return $str;
     }
@@ -466,5 +457,3 @@ EOT;
         return 0;
     }
 }
-
-?>
