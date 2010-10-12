@@ -57,14 +57,14 @@ class MarkupBabelProcessor
      */
     function rendme()
     {
-        if (!file_exists ($this->Source))
+        if (!file_exists($this->Source))
             return $this->format_error("Source file not found.");
-        if (file_exists ($this->Cache))
+        if (file_exists($this->Cache))
             return file_get_contents($this->Cache);
         chdir($this->BaseDir);
         $mode = $this->Mode;
         $res = $this->$mode();
-        file_put_contents($this->Cache,$res);
+        file_put_contents($this->Cache, $res);
         return $res;
     }
 
@@ -116,38 +116,70 @@ EOT;
 </div>
 EOT;
         }
-        return str_replace("\n","",$str);
+        return str_replace("\n", "", $str);
     }
 
-    function graph()        { return $this->generate_graphviz("dot");           }
-    function graph_print()  { return $this->generate_graphviz("dot","print");   }
-    function neato()        { return $this->generate_graphviz("neato");         }
-    function neato_print()  { return $this->generate_graphviz("neato","print"); }
-    function twopi()        { return $this->generate_graphviz("twopi");         }
-    function twopi_print()  { return $this->generate_graphviz("twopi","print"); }
-    function circo()        { return $this->generate_graphviz("circo");         }
-    function circo_print()  { return $this->generate_graphviz("circo","print"); }
-    function fdp()          { return $this->generate_graphviz("fdp");           }
-    function fdp_print()    { return $this->generate_graphviz("fdp","print");   }
+    function graph()
+    {
+        return $this->generate_graphviz("dot");
+    }
+    function graph_print()
+    {
+        return $this->generate_graphviz("dot", "print");
+    }
+    function neato()
+    {
+        return $this->generate_graphviz("neato");
+    }
+    function neato_print()
+    {
+        return $this->generate_graphviz("neato", "print");
+    }
+    function twopi()
+    {
+        return $this->generate_graphviz("twopi");
+    }
+    function twopi_print()
+    {
+        return $this->generate_graphviz("twopi", "print");
+    }
+    function circo()
+    {
+        return $this->generate_graphviz("circo");
+    }
+    function circo_print()
+    {
+        return $this->generate_graphviz("circo", "print");
+    }
+    function fdp()
+    {
+        return $this->generate_graphviz("fdp");
+    }
+    function fdp_print()
+    {
+        return $this->generate_graphviz("fdp", "print");
+    }
 
     function plot()
     {
         $src = file_get_contents($this->Source);
-        $blackList = array('cd', 'call', 'exit', 'load', 'pause', 'print', 'pwd', 'quit', 'replot', 'reread', 'reset', 'save', 'shell', 'system', 'test', 'update', '!', 'path', 'historysize', 'mouse', 'out', 'term', 'file', '\'/', '\'.','"');
+        $blackList = array('cd', 'call', 'exit', 'load', 'pause', 'print',
+                           'pwd', 'quit', 'replot', 'reread', 'reset', 'save',
+                           'shell', 'system', 'test', 'update', '!', 'path', 'historysize', 'mouse', 'out', 'term', 'file', '\'/', '\'.','"');
         foreach($blackList as $strBlack)
             if (stristr($src, $strBlack) !== false)
                 return "Sorry, directive {$strBlack} is forbidden!";
-        $lines = split("\n",$src);
+        $lines = split("\n", $src);
         $datasets = array();
         $src_filtered = "";
         $activedataset = "";
         foreach($lines as $line)
         {
-            if (strpos($line,"ENDDATASET") !== false)
+            if (strpos($line, "ENDDATASET") !== false)
                 $activedataset = "";
-            elseif (strpos($line,"DATASET") !== false) // If line like DATASET
+            elseif (strpos($line, "DATASET") !== false) // If line like DATASET
             {
-                $terms = explode(' ',trim($line));
+                $terms = explode(' ', trim($line));
                 if (sizeof($terms) >= 2)
                     $datasetname = $terms[1];
                 $datasetlabel = substr($line, strlen("DATASET ".$datasetname));
@@ -161,7 +193,7 @@ EOT;
             }
             else
             {
-                $res =preg_match('/^\s*(\d[\deEdDqQ\-\.]+)\s+(\d[eEdDqQ\.]*)\s*(#.*)?/', $line);
+                $res = preg_match('/^\s*(\d[\deEdDqQ\-\.]+)\s+(\d[eEdDqQ\.]*)\s*(#.*)?/', $line);
                 if ($res && $activedataset != "")
                     $datasets[$activedataset]['src'] .=$line."\n";
                 else
@@ -174,7 +206,7 @@ EOT;
 
         $outputpath = "{$this->Source}";
         if (wfIsWindows())
-            $outputpath = str_replace("\\","/",$outputpath);
+            $outputpath = str_replace("\\", "/", $outputpath);
         $str = <<<EOT
 set terminal png
 set output "{$outputpath}.png"
@@ -185,7 +217,7 @@ EOT;
         $this->myexec($cmd);
         $filename = "{$this->Source}.png";
         usleep(100000);
-        $resexists = file_exists ("{$this->Source}.png");
+        $resexists = file_exists("{$this->Source}.png");
         if (!$resexists)
         {
             $err = file_get_contents("{$this->Source}.err");
@@ -225,8 +257,9 @@ EOT;
 
     function pic_svg()
     {
-        $this->myexec("{$this->inkscapepath}inkscape --without-gui --export-area-drawing --export-plain-svg={$this->Source}.svg {$this->Source}");
-        $this->myexec("{$this->inkscapepath}inkscape --without-gui --export-area-drawing --export-png={$this->Source}.png {$this->Source} 2>{$this->Source}.err");
+        $opts = " --without-gui --export-area-drawing ";
+        $this->myexec("{$this->inkscapepath}inkscape $opts --export-plain-svg={$this->Source}.svg {$this->Source}");
+        $this->myexec("{$this->inkscapepath}inkscape $opts --export-png={$this->Source}.png {$this->Source} 2>{$this->Source}.err");
         if (!file_exists("{$this->Source}.png"))
         {
             $err = file_get_contents("{$this->Source}.err");
@@ -240,7 +273,7 @@ EOT;
 <img width="$width" height="$height" src="{$this->URI}{$this->Filename}.png">
 </a>
 EOT;
-        return str_replace("\n","",$str);
+        return str_replace("\n", "", $str);
     }
 
     function umlgraph()
@@ -271,8 +304,8 @@ copy "{$sequencefilename}";
 $src
 .PE
 EOT;
-        $src = str_replace("\r","",$src);
-        file_put_contents($this->Source,$src);
+        $src = str_replace("\r", "", $src);
+        file_put_contents($this->Source, $src);
         $this->myexec("pic2plot -Tsvg {$this->Source} > {$this->Source}.svg 2>{$this->Source}.err");
         $this->myexec("inkscape --without-gui --export-area-drawing  --export-plain-svg={$this->Source}.svg {$this->Filename}.svg");
         $this->myexec("inkscape --without-gui --export-area-drawing  --export-png={$this->Source}.png {$this->Filename}.svg 2>{$this->Source}.err");
@@ -286,8 +319,9 @@ EOT;
     function umlet()
     {
         $this->myexec("UMLet -action=convert -format=svg -filename={$this->Source}");
-        $this->myexec("{$this->inkscapepath}inkscape --without-gui --export-area-drawing  --export-plain-svg={$this->Source}.svg {$this->Filename}.svg");
-        $this->myexec("{$this->inkscapepath}inkscape --without-gui --export-area-drawing  --export-png={$this->Source}.png {$this->Filename}.svg 2>{$this->Source}.err");
+        $opts = " --without-gui --export-area-drawing ";
+        $this->myexec("{$this->inkscapepath}inkscape $opts --export-plain-svg={$this->Source}.svg {$this->Filename}.svg");
+        $this->myexec("{$this->inkscapepath}inkscape $opts --export-png={$this->Source}.png {$this->Filename}.svg 2>{$this->Source}.err");
         if (!file_exists("{$this->Source}.png"))
         {
             $err = file_get_contents("{$this->Source}.err");
@@ -300,7 +334,8 @@ EOT;
 
     function do_tex($tex)
     {
-        $blackList = array('\catcode', '\def', '\include', '\includeonly', '\input', '\newcommand', '\newenvironment', '\newtheorem', '\newfont', '\renewcommand', '\renewenvironment', '\typein', '\typeout', '\write', '\let', '\csname', '\read', '\open');
+        $blackList = array('\catcode', '\def', '\include', '\includeonly', '\input', '\newcommand', '\newenvironment', '\newtheorem',
+                           '\newfont', '\renewcommand', '\renewenvironment', '\typein', '\typeout', '\write', '\let', '\csname', '\read', '\open');
         foreach ($blackList as $strBlack)
             if (stristr($tex, $strBlack) !== false)
                 return "Sorry, directive {$strBlack} is forbidden!";
@@ -384,20 +419,20 @@ EOT;
         $graph->graphBorder = '1px solid blue';
 
         $src = file_get_contents($this->Source);
-        $lines = split("\n",$src);
+        $lines = split("\n", $src);
         $labels = array();
         $values = array();
         foreach($lines as $line)
         {
-            $line = preg_replace("/s+/",' ',trim($line));
-            $terms = explode(' ',$line);
+            $line = preg_replace("/s+/", ' ', trim($line));
+            $terms = explode(' ', $line);
             if (sizeof($terms) > 1)
             {
                 $value = $terms[sizeof($terms)-1];
                 unset($terms[sizeof($terms)-1]);
-                $text = join(' ',$terms);
+                $text = join(' ', $terms);
                 $parserOutput = $wgParser->parse($text, $wgTitle, $this->parserOptions);
-                $label = str_replace("<p>", "", str_replace("</p>","",$parserOutput->mText));
+                $label = str_replace("<p>", "", str_replace("</p>", "", $parserOutput->mText));
                 $label = str_replace("\r", "", $label);
                 $label = str_replace("\n", "", $label);
                 array_push($labels, $label);
@@ -407,9 +442,9 @@ EOT;
         $graph->values = $values;
         $graph->labels = $labels;
         $res = $graph->create();
-        $res = str_replace("<table","\n<table",$res);
-        $res = str_replace("<td","\n<td",$res);
-        $res = str_replace("<tr","\n<tr",$res);
+        $res = str_replace("<table", "\n<table", $res);
+        $res = str_replace("<td", "\n<td", $res);
+        $res = str_replace("<tr", "\n<tr", $res);
         return $res;
     }
 
@@ -425,7 +460,7 @@ EOT;
         else
         {
             $str = $cmd;
-            $str = str_replace("/cygdrive/d","d:",$str);
+            $str = str_replace("/cygdrive/d", "d:", $str);
             return exec($str);
         }
         return 0;

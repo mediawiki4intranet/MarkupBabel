@@ -22,7 +22,7 @@ function wf_callback_geshi($str,$lang)
 {
     $geshi = new GeSHi($str, $lang);
     $code = $geshi->parse_code();
-    $code = str_replace("<pre>&nbsp;\n", "<pre>",$code);
+    $code = str_replace("<pre>&nbsp;\n", "<pre>", $code);
     return $code;
 }
 
@@ -44,7 +44,7 @@ class MarkupBabel
         global $IP, $wgScriptPath;
 
         $this->BaseDir="$IP/images/generated";
-        $this->BaseDir=str_replace("\\","/",$this->BaseDir);
+        $this->BaseDir=str_replace("\\", "/", $this->BaseDir);
         $this->BaseURI="$wgScriptPath/images/generated";
     }
 
@@ -78,7 +78,7 @@ class MarkupBabel
         foreach ($arr as $strKey => $strVal)
         {
             $code = 'return wf_callback_generic($str,"'.$strVal.'");';
-            $wgParser->setHook($strKey, create_function( '$str', $code));
+            $wgParser->setHook($strKey, create_function('$str', $code));
         }
 
         $langArray = array(
@@ -94,7 +94,7 @@ class MarkupBabel
         foreach ($langArray as $lang)
         {
             $code = 'return wf_callback_geshi($str,"'.$lang.'");';
-            $wgParser->setHook('code-'. $lang, create_function( '$str', $code));
+            $wgParser->setHook('code-'. $lang, create_function('$str', $code));
         }
     }
 
@@ -114,8 +114,8 @@ class MarkupBabel
         $strDir   .= "/" . $strHash{0};
         $strURI   .= "/" . $strHash{0};
         if (!is_dir($strDir)) mkdir($strDir, 0777);
-        $strDir   .= "/" . substr($strHash, 0, 2)  ;
-        $strURI   .= "/" . substr($strHash, 0, 2)  ;
+        $strDir   .= "/" . substr($strHash, 0, 2);
+        $strURI   .= "/" . substr($strHash, 0, 2);
         if (!is_dir($strDir)) mkdir($strDir, 0777);
         $strDir   .= "/" . $strHash  ;
         $strURI   .= "/" . $strHash  ;
@@ -137,12 +137,12 @@ class MarkupBabel
 
     function rebuild_mode($mode)
     {
-        foreach ($this->globr($this->BaseDir."/".$mode,"{$mode}.source") as $file)
+        foreach ($this->globr($this->BaseDir."/".$mode, "{$mode}.source") as $file)
         {
             $arr = split("/", $file);
             $basefile = $arr[count($arr)-1];
-            $uri = str_replace($this->BaseDir,$this->BaseURI,$file);
-            $uri = str_replace($basefile,"",$uri);
+            $uri = str_replace($this->BaseDir, $this->BaseURI, $file);
+            $uri = str_replace($basefile, "", $uri);
             if (file_exists("{$file}.cache"))
                 unlink("{$file}.cache");
             print "$file\n";
@@ -175,5 +175,3 @@ class MarkupBabel
         return $aFiles;
     }
 }
-
-?>
