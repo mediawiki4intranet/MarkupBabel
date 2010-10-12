@@ -84,33 +84,38 @@ class MarkupBabelProcessor
             $err = file_get_contents("{$this->Source}.err");
             return "<div class=\"error\">\n$err\n</div>";
         }
-        $image = new Imagick("{$this->Source}.png");
-        if ($mode == "print")
-            $imageprint = $this->checkImageFileRes("{$this->Source}.print.png");
 
-        $width = $image->getImageWidth();
-        $height = $image->getImageHeight();
+        if ($image = imagecreatefrompng("{$this->Source}.png"))
+        {
+            $width = imagesx($image);
+            $height = imagesy($image);
+            $width = "width=\"$width\" height=\"$height\"";
+            imagedestroy($image);
+        }
 
         $map = file_get_contents("{$this->Source}.map");
         $str = <<<EOT
 <map name="$mapname">$map</map>
-<img width="$width" height="$height" src="{$this->URI}{$this->Filename}.png" usemap="#{$mapname}"/>
+<img $width src="{$this->URI}{$this->Filename}.png" usemap="#{$mapname}"/>
 <a class="dotsvg" href="{$this->URI}{$this->Filename}.svg">[svg]</a>
 EOT;
         if ($mode == "print")
         {
-            $this->checkImageRes($imageprint);
-            $width = $imageprint->getImageWidth()/2;
-            $height = $imageprint->getImageHeight()/2;
+            $width = '';
+            if ($imageprint = imagecreatefrompng("{$this->Source}.print.png"))
+            {
+                $width = intval(imagesx($imageprint)/2);
+                $height = intval(imagesy($imageprint)/2);
+                $width = "width=\"$width\" height=\"$height\"";
+                imagedestroy($imageprint);
+            }
             $str = <<<EOT
 <div class="screenonly">$str</div>
 <div class="printonly">
-<img width="{$width}" height="{$height}" src="{$this->URI}{$this->Filename}.print.png" />
+<img $width src="{$this->URI}{$this->Filename}.print.png" />
 </div>
 EOT;
         }
-        $this->checkImageRes($image);
-        $image->writeImage("{$this->Source}.png");
         return str_replace("\n","",$str);
     }
 
@@ -216,37 +221,6 @@ EOT;
 EOT;
         }
         return $str;
-    }
-
-    function &checkImageFileRes($filename)
-    {
-        $image = new Imagick($filename);
-        $image->trimImage(0);
-        $this->checkImageRes($image);
-        $image->writeImage($filename);
-        return $image;
-    }
-
-    /**
-     * Функция проверяет разрешение изображения,
-     * чтобы оно влезало в заданную ширину в дюймах
-     */
-    function checkImageRes(&$image)
-    {
-        global $egMarkupBabelMaxImageInch;
-        if ($egMarkupBabelMaxImageInch)
-        {
-            $width = $image->getImageWidth();
-            $res = $image->getImageResolution();
-            if (!$res['x'])
-                $res['x'] = 72;
-            if ($width/$res['x'] > $egMarkupBabelMaxImageInch)
-            {
-                $res = $width/$egMarkupBabelMaxImageInch;
-                $image->setImageResolution($res, $res);
-            }
-        }
-        return $image;
     }
 
     function pic_svg()
