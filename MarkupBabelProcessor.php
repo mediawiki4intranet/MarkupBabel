@@ -35,11 +35,11 @@ class MarkupBabelProcessor
         if (wfIsWindows())
         {
             global $IP;
-            $this->dotpath = realpath($IP."/../../app/graphviz/bin/");
-            $this->gnuplotpath = realpath($IP."/../../app/gnuplot/bin/")."p";
-            $this->texpath = realpath($IP."/../../app/tex/miktex/bin/");
-            $this->inkscapepath = realpath($IP."/../../app/inkscape/");
-            $this->umlgraphpath = realpath($IP."/../../app/umlgraph/bin/");
+            $this->dotpath = realpath($IP."/../../app/graphviz/bin") . "/";
+            $this->gnuplotpath = realpath($IP."/../../app/gnuplot/bin")."/p";
+            $this->texpath = realpath($IP."/../../app/tex/miktex/bin") . "/";
+            $this->inkscapepath = realpath($IP."/../../app/inkscape") . "/";
+            $this->umlgraphpath = realpath($IP."/../../app/umlgraph/bin" . "/");
         }
     }
 
