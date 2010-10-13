@@ -68,6 +68,19 @@ class MarkupBabelProcessor
         return $res;
     }
 
+    static function imagesizes($file, $divby = 1)
+    {
+        $r = "";
+        if ($image = imagecreatefrompng($file))
+        {
+            $width = intval(imagesx($image)/$divby);
+            $height = intval(imagesy($image)/$divby);
+            $r = "width=\"$width\" height=\"$height\"";
+            imagedestroy($image);
+        }
+        return $r;
+    }
+
     /**
      * Generate all kinds of Grapviz graphs (dot/neato/fdp/circo/...)
      */
@@ -85,34 +98,21 @@ class MarkupBabelProcessor
             return "<div class=\"error\">\n$err\n</div>";
         }
 
-        if ($image = imagecreatefrompng("{$this->Source}.png"))
-        {
-            $width = imagesx($image);
-            $height = imagesy($image);
-            $width = "width=\"$width\" height=\"$height\"";
-            imagedestroy($image);
-        }
+        $wh = self::imagesizes("{$this->Source}.png");
 
         $map = file_get_contents("{$this->Source}.map");
         $str = <<<EOT
 <map name="$mapname">$map</map>
-<img $width src="{$this->URI}{$this->Filename}.png" usemap="#{$mapname}"/>
+<img $wh src="{$this->URI}{$this->Filename}.png" usemap="#{$mapname}"/>
 <a class="dotsvg" href="{$this->URI}{$this->Filename}.svg">[svg]</a>
 EOT;
         if ($mode == "print")
         {
-            $width = '';
-            if ($imageprint = imagecreatefrompng("{$this->Source}.print.png"))
-            {
-                $width = intval(imagesx($imageprint)/2);
-                $height = intval(imagesy($imageprint)/2);
-                $width = "width=\"$width\" height=\"$height\"";
-                imagedestroy($imageprint);
-            }
+            $wh = self::imagesizes("{$this->Source}.print.png", 2);
             $str = <<<EOT
 <div class="screenonly">$str</div>
 <div class="printonly">
-<img $width src="{$this->URI}{$this->Filename}.print.png" />
+<img $wh src="{$this->URI}{$this->Filename}.print.png" />
 </div>
 EOT;
         }
@@ -240,7 +240,6 @@ set output "{$outputpath}.svg"
 EOT;
         file_put_contents($this->Source . ".plt2", $str);
         $this->myexec("{$this->gnuplotpath}gnuplot {$this->Source}.plt2 2>{$this->Source}.err2");
-        $this->checkImageFileRes("{$this->Source}.png");
         $str = <<<EOT
 <img src="{$this->URI}{$this->Filename}.png">
 EOT;
@@ -265,12 +264,10 @@ EOT;
             $err = file_get_contents("{$this->Source}.err");
             return "<div class=\"error\">\n$err\n</div>";
         }
-        $image = $this->checkImageFileRes("{$this->Source}.png");
-        $width = $image->getImageWidth();
-        $height = $image->getImageHeight();
+        $wh = self::imagesizes("{$this->Source}.png");
         $str = <<<EOT
 <a href="{$this->URI}{$this->Filename}.svg">
-<img width="$width" height="$height" src="{$this->URI}{$this->Filename}.png">
+<img $wh src="{$this->URI}{$this->Filename}.png">
 </a>
 EOT;
         return str_replace("\n", "", $str);
@@ -287,7 +284,6 @@ EOT;
             $err = file_get_contents("{$this->Source}.err");
             return "<div class=\"error\">\n$err\n</div>";
         }
-        $this->checkImageFileRes("{$this->Source}.png");
         $str = "<a href=\"{$this->URI}{$this->Filename}.svg\"><img src=\"{$this->URI}{$this->Filename}.png\"></a>";
         return $str;
     }
@@ -327,7 +323,6 @@ EOT;
             $err = file_get_contents("{$this->Source}.err");
             return "<div class=\"error\">\n$err\n</div>";
         }
-        $this->checkImageFileRes("{$this->Source}.png");
         $str = "<a href=\"{$this->URI}{$this->Filename}.svg\"><img src=\"{$this->URI}{$this->Filename}.png\"></a>";
         return $str;
     }
