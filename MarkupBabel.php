@@ -22,7 +22,7 @@ function wf_callback_geshi($str,$lang)
 {
     $geshi = new GeSHi($str, $lang);
     $code = $geshi->parse_code();
-    $code = str_replace("<pre>&nbsp;\n", "<pre>", $code);
+    $code = preg_replace("/(^\s*<pre[^<>]*>\s*)&nbsp;\n|\n&nbsp;\s*(<\/pre>)/is", '\1\2', $code);
     return $code;
 }
 
@@ -37,7 +37,7 @@ function MarkupBabelRegister()
 
 class MarkupBabel
 {
-    var $BaseDir="";
+    var $BaseDir = "";
 
     function MarkupBabel()
     {
@@ -72,7 +72,7 @@ class MarkupBabel
             'hbarchart'   => 'hbarchart',
             'vbarchart'   => 'vbarchart',
             'umlet'       => 'umlet',
-            'umlgraph'       => 'umlgraph',
+            'umlgraph'    => 'umlgraph',
             'umlsequence' => 'umlsequence',
         );
         foreach ($arr as $strKey => $strVal)
