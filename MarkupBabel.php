@@ -28,11 +28,30 @@ function wf_callback_geshi($str,$lang)
 
 settype($MarkupBabel, 'object');
 $wgExtensionFunctions[] = 'MarkupBabelRegister';
+$wgHooks['ArticleViewHeader'][] = 'MarkupBabel::AutoHighlight';
+
 function MarkupBabelRegister()
 {
     global $MarkupBabel;
     $MarkupBabel = new MarkupBabel();
     $MarkupBabel->register();
+}
+
+if (!$wgAutoHighlightExtensions)
+{
+    // Pages with these extensions will get automatic code highlighting
+    // (if there is no <source> or <nowiki> tag in the beginning)
+    $wgAutoHighlightExtensions = array(
+        'js'    => 'javascript',
+        'css'   => 'css',
+        'sh'    => 'bash',
+        'diff'  => 'diff',
+        'patch' => 'diff',
+        'htm'   => 'html4strict',
+        'html'  => 'html4strict',
+        'xml'   => 'xml',
+        'svg'   => 'xml',
+    );
 }
 
 class MarkupBabel
@@ -96,6 +115,24 @@ class MarkupBabel
             $code = 'return wf_callback_geshi($str,"'.$lang.'");';
             $wgParser->setHook('code-'. $lang, create_function('$str', $code));
         }
+    }
+
+    function AutoHighlight($article, &$outputDone, &$useParserCache)
+    {
+        global $wgAutoHighlightExtensions, $wgOut;
+        if ($wgAutoHighlightExtensions &&
+            preg_match('!\.('.implode('|', array_keys($wgAutoHighlightExtensions)).')$!u', $article->getTitle()->getText(), $m))
+        {
+            $text = $article->getContent();
+            if (!preg_match('#^\s*<(source|code-|nowiki)#is', $text))
+            {
+                $lang = $wgAutoHighlightExtensions[$m[1]];
+                $outputDone = true;
+                $wgOut->addHTML(wf_callback_geshi($text, $lang));
+                return false;
+            }
+        }
+        return true;
     }
 
     function process($strSrc, $strMode)
