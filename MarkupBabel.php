@@ -121,18 +121,16 @@ class MarkupBabel
     {
         global $wgAutoHighlightExtensions, $wgOut;
         if ($wgAutoHighlightExtensions &&
-            preg_match('!\.('.implode('|', array_keys($wgAutoHighlightExtensions)).')$!u', $article->getTitle()->getText(), $m))
+            preg_match('!\.('.implode('|', array_keys($wgAutoHighlightExtensions)).')$!u', $article->getTitle()->getText(), $m) &&
+            $article->exists())
         {
-            if ($article->exists())
+            $text = $article->getContent();
+            if (!preg_match('#^\s*<(source|code-|nowiki)#is', $text))
             {
-                $text = $article->getContent();
-                if (!preg_match('#^\s*<(source|code-|nowiki)#is', $text))
-                {
-                    $lang = $wgAutoHighlightExtensions[$m[1]];
-                    $outputDone = true;
-                    $wgOut->addHTML(wf_callback_geshi($text, $lang));
-                    return false;
-                }
+                $lang = $wgAutoHighlightExtensions[$m[1]];
+                $outputDone = true;
+                $wgOut->addHTML(wf_callback_geshi($text, $lang));
+                return false;
             }
         }
         return true;
