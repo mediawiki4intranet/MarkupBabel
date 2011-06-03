@@ -37,7 +37,8 @@ class MarkupBabelProcessor
             global $IP;
             $this->dotpath = realpath($IP."/../../app/graphviz/bin") . "/";
             $this->gnuplotpath = realpath($IP."/../../app/gnuplot/bin")."/p";
-            $this->texpath = realpath($IP."/../../app/tex/miktex/bin") . "/";
+            //$this->texpath = realpath($IP."/../../app/tex/miktex/bin") . "/";
+            $this->texpath = realpath($IP."/../../app/xetex/bin/win32") . "/";
             $this->inkscapepath = realpath($IP."/../../app/inkscape") . "/";
             $this->umlgraphpath = realpath($IP."/../../app/umlgraph/bin" . "/");
         }
@@ -338,12 +339,16 @@ EOT;
 
         $this->myexec("{$this->texpath}latex --interaction=nonstopmode {$this->Source}.tex");
         $this->myexec("{$this->texpath}dvipng -gamma 1.5 -T tight {$this->Source}");
+        $this->myexec("{$this->texpath}dvisvgm --exact -TS1.5 --no-fonts --bbox=min --output=\"%f-%p.svg\" {$this->Source}.dvi");
         $str = "";
         $hash = basename($this->Filename, ".source");
+        $i = 1;
         foreach (glob("{$this->BaseDir}/{$hash}*.png") as $pngfile)
         {
             $pngfile = basename($pngfile);
-            $str .= "<img src=\"{$this->URI}{$pngfile}\">";
+            $ipadded = str_pad($i, 2, "0", STR_PAD_LEFT);
+            $str .= "<object type=\"image/svg+xml\" data=\"{$this->URI}{$hash}.source-{$ipadded}.svg\"><img src=\"{$this->URI}{$pngfile}\"></object>";
+            $i = $i + 1;
         }
         return $str;
     }
@@ -356,7 +361,8 @@ EOT;
 \\usepackage{ucs}
 \\usepackage[utf8x]{inputenc}
 \\usepackage[english,russian]{babel}
-\\usepackage{amssymb,amsmath,amscd,concmath}
+%\\usepackage{amssymb,amsmath,amscd,concmath}
+\\usepackage{amssymb,amsmath,amscd}
 \\usepackage{color}
 \\pagestyle{empty}
 \\begin{document}
@@ -374,7 +380,8 @@ EOT;
 \\usepackage{ucs}
 \\usepackage[utf8x]{inputenc}
 \\usepackage[english,russian]{babel}
-\\usepackage{amssymb,amsmath,amscd,concmath}
+%\\usepackage{amssymb,amsmath,amscd,concmath}
+\\usepackage{amssymb,amsmath,amscd}
 \\pagestyle{empty}
 \\begin{document}
 \\begin{equation*}{$src}\\end{equation*}
