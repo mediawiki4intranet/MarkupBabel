@@ -140,28 +140,17 @@ class MarkupBabel
     {
         $strHash = md5($strSrc . $strMode);
 
-        $oldumask = umask(0);
-        $strDir   = $this->BaseDir;
-        if (!is_dir($strDir)) mkdir($strDir, 0777);
-        $strURI   = $this->BaseURI;
+        $rel = '/' . $strMode . '/' . $strHash{0} . '/' . substr($strHash, 0, 2) . '/' . $strHash;
+        $strDir = $this->BaseDir . $rel;
+        $strURI = $this->BaseURI . $rel . '/';
 
-        if (!is_dir($strDir)) mkdir($strDir, 0777);
-        $strDir   .= "/" . $strMode;
-        $strURI   .= "/" . $strMode;
-        if (!is_dir($strDir)) mkdir($strDir, 0777);
-        $strDir   .= "/" . $strHash{0};
-        $strURI   .= "/" . $strHash{0};
-        if (!is_dir($strDir)) mkdir($strDir, 0777);
-        $strDir   .= "/" . substr($strHash, 0, 2);
-        $strURI   .= "/" . substr($strHash, 0, 2);
-        if (!is_dir($strDir)) mkdir($strDir, 0777);
-        $strDir   .= "/" . $strHash  ;
-        $strURI   .= "/" . $strHash  ;
-        if (!is_dir($strDir)) mkdir($strDir, 0777);
+        $oldumask = umask(0);
+        if (!file_exists($strDir))
+            mkdir($strDir, 0777, true);
         umask($oldumask);
-        $strURI   .= "/";
+
         $strLocalFile = "$strMode.source";
-        $strFile   = $strDir . "/" . $strLocalFile;
+        $strFile = $strDir . "/" . $strLocalFile;
 
         if ($obj = fopen($strFile, 'w'))
         {

@@ -18,7 +18,7 @@ class MarkupBabelProcessor
     var $Cache = '';
     var $URI = '';
 
-    function MarkupBabelProcessor($path,$mode,$uri)
+    function MarkupBabelProcessor($path, $mode, $uri)
     {
         $this->Source = $path;
         $this->Filename = basename($path);
@@ -58,9 +58,10 @@ class MarkupBabelProcessor
      */
     function rendme()
     {
+        global $wgRequest;
         if (!file_exists($this->Source))
             return $this->format_error("Source file not found.");
-        if (file_exists($this->Cache))
+        if (file_exists($this->Cache) && $wgRequest->getVal('action') !== 'purge')
             return file_get_contents($this->Cache);
         chdir($this->BaseDir);
         $mode = $this->Mode;
@@ -74,12 +75,12 @@ class MarkupBabelProcessor
         $r = "";
         if ($image = imagecreatefrompng($file))
         {
-            $width = intval(imagesx($image)/$divby);
-            $height = intval(imagesy($image)/$divby);
+            $width = ceil(imagesx($image)/$divby);
+            $height = ceil(imagesy($image)/$divby);
             $r = "width=\"$width\" height=\"$height\"";
             imagedestroy($image);
         }
-        return $r;
+        return array($r, $width, $height);
     }
 
     /**
@@ -88,7 +89,13 @@ class MarkupBabelProcessor
     function generate_graphviz($dot, $mode = "")
     {
         $mapname = md5($this->BaseDir);
-        trim($this->myexec("{$this->dotpath}$dot -Tsvg -o {$this->Source}.svg {$this->Source} 2>{$this->Source}.err"));
+        $this->myexec("{$this->dotpath}$dot -Tsvg -o {$this->Source}.svg {$this->Source} 2>{$this->Source}.err");
+
+        // Set xlinks' targets to _parent
+        $svg = file_get_contents($this->Source.'.svg');
+        $svg = preg_replace('#<a([^<>]*xlink:href=[^<>]*[^/])(/?)>#is', '<a\1 target="_parent"\2>', $svg);
+        file_put_contents($this->Source.'.svg', $svg);
+
         $this->myexec("{$this->dotpath}$dot -Tcmap -o {$this->Source}.map {$this->Source}");
         $this->myexec("{$this->dotpath}$dot -Tpng  -o {$this->Source}.png {$this->Source}");
         if ($mode == "print")
@@ -99,17 +106,21 @@ class MarkupBabelProcessor
             return "<div class=\"error\">\n$err\n</div>";
         }
 
-        $wh = self::imagesizes("{$this->Source}.png");
+        list($wh, $w, $h) = self::imagesizes("{$this->Source}.png");
+        // Hack for Google Chrome to hide SVG scrollbars
+        $w++; $h++;
 
         $map = file_get_contents("{$this->Source}.map");
         $str = <<<EOT
+<object width="$w" height="$h" type="image/svg+xml" data="{$this->URI}{$this->Filename}.svg" style="overflow: hidden">
 <map name="$mapname">$map</map>
 <img $wh src="{$this->URI}{$this->Filename}.png" usemap="#{$mapname}"/>
 <a class="dotsvg" href="{$this->URI}{$this->Filename}.svg">[svg]</a>
+</object>
 EOT;
         if ($mode == "print")
         {
-            $wh = self::imagesizes("{$this->Source}.print.png", 2);
+            list($wh) = self::imagesizes("{$this->Source}.print.png", 2);
             $str = <<<EOT
 <div class="screenonly">$str</div>
 <div class="printonly">
@@ -265,7 +276,7 @@ EOT;
             $err = file_get_contents("{$this->Source}.err");
             return "<div class=\"error\">\n$err\n</div>";
         }
-        $wh = self::imagesizes("{$this->Source}.png");
+        list($wh) = self::imagesizes("{$this->Source}.png");
         $str = <<<EOT
 <a href="{$this->URI}{$this->Filename}.svg">
 <img $wh src="{$this->URI}{$this->Filename}.png">
