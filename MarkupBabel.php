@@ -121,6 +121,7 @@ class MarkupBabel
     {
         global $wgAutoHighlightExtensions, $wgOut;
         if ($wgAutoHighlightExtensions &&
+            $article->getTitle()->getNamespace() != NS_FILE &&
             preg_match('!\.('.implode('|', array_keys($wgAutoHighlightExtensions)).')$!u', $article->getTitle()->getText(), $m) &&
             $article->exists())
         {
