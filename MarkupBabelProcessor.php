@@ -9,6 +9,8 @@
  * @license http://www.gnu.org/copyleft/gpl.html GNU General Public License 2.0 or later
  */
 
+require_once "$IP/includes/ImageFunctions.php";
+
 class MarkupBabelProcessor
 {
     var $Source = '';
@@ -358,7 +360,9 @@ EOT;
         {
             $pngfile = basename($pngfile);
             $ipadded = str_pad($i, 2, "0", STR_PAD_LEFT);
-            $str .= "<object type=\"image/svg+xml\" data=\"{$this->URI}{$hash}.source-{$ipadded}.svg\"><img src=\"{$this->URI}{$pngfile}\"></object>";
+            $size = wfGetSVGsize($this->Filename.'-'.$ipadded.'.svg');
+            $size = $size ? $size[3] : '';
+            $str .= "<object $size type=\"image/svg+xml\" data=\"{$this->URI}{$hash}.source-{$ipadded}.svg\"><img src=\"{$this->URI}{$pngfile}\"></object>";
             $i = $i + 1;
         }
         return $str;
