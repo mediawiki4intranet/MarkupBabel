@@ -37,7 +37,7 @@ function MarkupBabelRegister()
     $MarkupBabel->register();
 }
 
-if (!$wgAutoHighlightExtensions)
+if (!isset($wgAutoHighlightExtensions))
 {
     // Pages with these extensions will get automatic code highlighting
     // (if there is no <source> or <nowiki> tag in the beginning)
