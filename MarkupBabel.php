@@ -62,9 +62,9 @@ class MarkupBabel
     {
         global $IP, $wgScriptPath;
 
-        $this->BaseDir="$IP/images/generated";
-        $this->BaseDir=str_replace("\\", "/", $this->BaseDir);
-        $this->BaseURI="$wgScriptPath/images/generated";
+        $this->BaseDir = "$IP/images/generated";
+        $this->BaseDir = str_replace("\\", "/", $this->BaseDir);
+        $this->BaseURI = wfExpandUrl("$wgScriptPath/images/generated");
     }
 
     function register()
