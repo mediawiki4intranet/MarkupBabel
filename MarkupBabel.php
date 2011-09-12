@@ -62,9 +62,8 @@ class MarkupBabel
     {
         global $IP, $wgScriptPath;
 
-        $this->BaseDir = "$IP/images/generated";
-        $this->BaseDir = str_replace("\\", "/", $this->BaseDir);
-        $this->BaseURI = wfExpandUrl("$wgScriptPath/images/generated");
+        $this->BaseDir="$IP/images/generated";
+        $this->BaseDir=str_replace("\\", "/", $this->BaseDir);
     }
 
     function register()
@@ -137,13 +136,15 @@ class MarkupBabel
         return true;
     }
 
+    // Main entry point: generates path and call MarkupBabelProcessor
     function process($strSrc, $strMode)
     {
+        global $wgScriptPath;
         $strHash = md5($strSrc . $strMode);
 
         $rel = '/' . $strMode . '/' . $strHash{0} . '/' . substr($strHash, 0, 2) . '/' . $strHash;
         $strDir = $this->BaseDir . $rel;
-        $strURI = $this->BaseURI . $rel . '/';
+        $strURI = '$URI'.$rel.'/';
 
         $oldumask = umask(0);
         if (!file_exists($strDir))
@@ -153,26 +154,25 @@ class MarkupBabel
         $strLocalFile = "$strMode.source";
         $strFile = $strDir . "/" . $strLocalFile;
 
-        if ($obj = fopen($strFile, 'w'))
-        {
-            fwrite($obj, $strSrc);
-            fclose($obj);
-        }
+        $processor = new MarkupBabelProcessor($strSrc, $strFile, $strMode, $strURI);
+        $html = $processor->rendme();
 
-        $processor = new MarkupBabelProcessor($strFile, $strMode, $strURI);
-        return $processor->rendme();
+        // Real URL is substituted just before output, to allow using different script paths
+        // and absolute URLs via hacking $wgScriptPath
+        $html = str_replace($strURI, "$wgScriptPath/images/generated$rel/", $html);
+        return $html;
     }
 
+    // Rebuild cache for $mode
     function rebuild_mode($mode)
     {
         foreach ($this->globr($this->BaseDir."/".$mode, "{$mode}.source") as $file)
         {
-            $arr = split("/", $file);
-            $basefile = $arr[count($arr)-1];
-            $uri = str_replace($this->BaseDir, $this->BaseURI, $file);
+            $basefile = basename($file);
+            $uri = str_replace($this->BaseDir, '$URI', $file);
             $uri = str_replace($basefile, "", $uri);
-            if (file_exists("{$file}.cache"))
-                unlink("{$file}.cache");
+            if (file_exists("$file.cache"))
+                unlink("$file.cache");
             print "$file\n";
             ob_flush();
             flush();

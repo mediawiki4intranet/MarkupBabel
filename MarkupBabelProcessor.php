@@ -13,6 +13,7 @@ require_once "$IP/includes/ImageFunctions.php";
 
 class MarkupBabelProcessor
 {
+    var $Content = '';
     var $Source = '';
     var $Filename = '';
     var $Hash = '';
@@ -20,15 +21,15 @@ class MarkupBabelProcessor
     var $Cache = '';
     var $URI = '';
 
-    function MarkupBabelProcessor($path, $mode, $uri)
+    function MarkupBabelProcessor($content, $path, $mode, $uri)
     {
-        $this->Source = $path;
+        $this->Content = $content;
+        $this->Source = realpath($path);
         $this->Filename = basename($path);
         $this->BaseDir = dirname($path);
         $this->Mode = $mode;
         $this->Cache = $path.".cache";
         $this->URI = $uri;
-        $this->Source = realpath($this->Source);
         $this->parserOptions = new ParserOptions();
         $this->dotpath = "";
         $this->gnuplotpath = "";
@@ -61,10 +62,11 @@ class MarkupBabelProcessor
     function rendme()
     {
         global $wgRequest;
-        if (!file_exists($this->Source))
-            return $this->format_error("Source file not found.");
         if (file_exists($this->Cache) && $wgRequest->getVal('action') !== 'purge')
             return file_get_contents($this->Cache);
+        file_put_contents($this->Source, $this->Content);
+        if (!file_exists($this->Source))
+            return $this->format_error("No write permission to $this->Source");
         chdir($this->BaseDir);
         $mode = $this->Mode;
         $res = $this->$mode();
@@ -176,14 +178,15 @@ EOT;
 
     function plot()
     {
-        $src = file_get_contents($this->Source);
-        $blackList = array('cd', 'call', 'exit', 'load', 'pause', 'print',
-                           'pwd', 'quit', 'replot', 'reread', 'reset', 'save',
-                           'shell', 'system', 'test', 'update', '!', 'path', 'historysize', 'mouse', 'out', 'term', 'file', '\'/', '\'.','"');
+        $blackList = array(
+            'cd', 'call', 'exit', 'load', 'pause', 'print',
+            'pwd', 'quit', 'replot', 'reread', 'reset', 'save',
+            'shell', 'system', 'test', 'update', '!', 'path', 'historysize', 'mouse', 'out', 'term', 'file', '\'/', '\'.','"'
+        );
         foreach($blackList as $strBlack)
-            if (stristr($src, $strBlack) !== false)
+            if (stristr($this->Content, $strBlack) !== false)
                 return "Sorry, directive {$strBlack} is forbidden!";
-        $lines = split("\n", $src);
+        $lines = split("\n", $this->Content);
         $datasets = array();
         $src_filtered = "";
         $activedataset = "";
@@ -307,15 +310,14 @@ EOT;
         $sequencefilename = dirname(__FILE__) . '/sequence.pic';
         $this->DiplomaTemplateName = $dir . "diploma.png";
 
-        $src = file_get_contents($this->Source);
-        $src = <<<EOT
+        $this->Content = <<<EOT
 .PS
 copy "{$sequencefilename}";
-$src
+{$this->Content}
 .PE
 EOT;
-        $src = str_replace("\r", "", $src);
-        file_put_contents($this->Source, $src);
+        $this->Content = str_replace("\r", "", $this->Content);
+        file_put_contents($this->Source, $this->Content);
         $this->myexec("pic2plot -Tsvg {$this->Source} > {$this->Source}.svg 2>{$this->Source}.err");
         $this->myexec("inkscape --without-gui --export-area-drawing  --export-plain-svg={$this->Source}.svg {$this->Filename}.svg");
         $this->myexec("inkscape --without-gui --export-area-drawing  --export-png={$this->Source}.png {$this->Filename}.svg 2>{$this->Source}.err");
@@ -370,7 +372,6 @@ EOT;
 
     function latex()
     {
-        $src = file_get_contents($this->Source);
         $str = <<<EOT
 \\documentclass[12pt]{article}
 \\usepackage{ucs}
@@ -381,7 +382,7 @@ EOT;
 \\usepackage{color}
 \\pagestyle{empty}
 \\begin{document}
-{$src}
+{$this->Content}
 \\end{document}
 EOT;
         return $this->do_tex($str);
@@ -389,7 +390,6 @@ EOT;
 
     function amsmath()
     {
-        $src = file_get_contents($this->Source);
         $str = <<<EOT
 \\documentclass[12pt]{article}
 \\usepackage{ucs}
@@ -399,7 +399,7 @@ EOT;
 \\usepackage{amssymb,amsmath,amscd}
 \\pagestyle{empty}
 \\begin{document}
-\\begin{equation*}{$src}\\end{equation*}
+\\begin{equation*}{$this->Content}\\end{equation*}
 \\end{document}
 EOT;
         return $this->do_tex($str);
@@ -435,8 +435,7 @@ EOT;
         $graph->graphPadding = 15;
         $graph->graphBorder = '1px solid blue';
 
-        $src = file_get_contents($this->Source);
-        $lines = split("\n", $src);
+        $lines = split("\n", $this->Content);
         $labels = array();
         $values = array();
         foreach($lines as $line)
