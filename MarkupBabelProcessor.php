@@ -24,7 +24,7 @@ class MarkupBabelProcessor
     function MarkupBabelProcessor($content, $path, $mode, $uri)
     {
         $this->Content = $content;
-        $this->Source = realpath($path);
+        $this->Source = $path;
         $this->Filename = basename($path);
         $this->BaseDir = dirname($path);
         $this->Mode = $mode;
