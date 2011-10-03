@@ -119,10 +119,10 @@ class MarkupBabel
     function AutoHighlight($article, &$outputDone, &$useParserCache)
     {
         global $wgAutoHighlightExtensions, $wgOut;
-        if ($wgAutoHighlightExtensions &&
-            $article->getTitle()->getNamespace() != NS_FILE &&
+        $ns = $article->getTitle()->getNamespace();
+        if ($wgAutoHighlightExtensions && $ns != NS_FILE &&
             preg_match('!\.('.implode('|', array_keys($wgAutoHighlightExtensions)).')$!u', $article->getTitle()->getText(), $m) &&
-            $article->exists())
+            ($article->exists() || $ns == NS_MEDIAWIKI))
         {
             $text = $article->getContent();
             if (!preg_match('#^\s*<(source|code-|nowiki)#is', $text))
