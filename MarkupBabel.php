@@ -116,7 +116,7 @@ class MarkupBabel
         }
     }
 
-    function AutoHighlight($article, &$outputDone, &$useParserCache)
+    static function AutoHighlight($article, &$outputDone, &$useParserCache)
     {
         global $wgAutoHighlightExtensions, $wgOut;
         $ns = $article->getTitle()->getNamespace();
