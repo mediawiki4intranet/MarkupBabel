@@ -362,10 +362,18 @@ EOT;
         {
             $pngfile = basename($pngfile);
             $ipadded = str_pad($i, 2, "0", STR_PAD_LEFT);
-            $size = wfGetSVGsize($this->Filename.'-'.$ipadded.'.svg');
-            $size = $size ? $size[3] : '';
-            $str .= "<object $size type=\"image/svg+xml\" data=\"{$this->URI}{$hash}.source-{$ipadded}.svg\"><img src=\"{$this->URI}{$pngfile}\"></object>";
-            $i = $i + 1;
+            if (file_exists($this->Filename.'-'.$ipadded.'.svg'))
+            {
+                $size = wfGetSVGsize($this->Filename.'-'.$ipadded.'.svg');
+                $size = $size ? $size[3] : '';
+                $str .= "<object $size type=\"image/svg+xml\" data=\"{$this->URI}{$hash}.source-{$ipadded}.svg\"><img src=\"{$this->URI}{$pngfile}\" /></object>";
+            }
+            else
+            {
+                wfDebug(__CLASS__.": dvisvgm not found, disabling vector rendering of TeX\n");
+                $str .= "<img src=\"{$this->URI}{$pngfile}\" />";
+            }
+            $i++;
         }
         return $str;
     }

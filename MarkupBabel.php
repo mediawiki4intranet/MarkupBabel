@@ -62,13 +62,13 @@ class MarkupBabel
     {
         global $IP, $wgScriptPath;
 
-        $this->BaseDir="$IP/images/generated";
-        $this->BaseDir=str_replace("\\", "/", $this->BaseDir);
+        $this->BaseDir = "$IP/images/generated";
+        $this->BaseDir = str_replace("\\", "/", $this->BaseDir);
     }
 
     function register()
     {
-        global $wgParser;
+        global $wgParser, $wgUseTex;
         $arr = array (
             'amsmath'     => 'amsmath',
             'm'           => 'amsmath',
@@ -93,6 +93,11 @@ class MarkupBabel
             'umlgraph'    => 'umlgraph',
             'umlsequence' => 'umlsequence',
         );
+        if (empty($wgUseTex))
+        {
+            // Also enable standard MediaWiki's <math> tag when $wgUseTex is disabled
+            $arr['math'] = 'amsmath';
+        }
         foreach ($arr as $strKey => $strVal)
         {
             $code = 'return wf_callback_generic($str,"'.$strVal.'");';
