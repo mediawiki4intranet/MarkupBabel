@@ -186,7 +186,7 @@ EOT;
         foreach($blackList as $strBlack)
             if (stristr($this->Content, $strBlack) !== false)
                 return "Sorry, directive {$strBlack} is forbidden!";
-        $lines = split("\n", $this->Content);
+        $lines = explode("\n", $this->Content);
         $datasets = array();
         $src_filtered = "";
         $activedataset = "";
@@ -443,7 +443,7 @@ EOT;
         $graph->graphPadding = 15;
         $graph->graphBorder = '1px solid blue';
 
-        $lines = split("\n", $this->Content);
+        $lines = explode("\n", $this->Content);
         $labels = array();
         $values = array();
         foreach($lines as $line)
