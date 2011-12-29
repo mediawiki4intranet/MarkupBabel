@@ -59,7 +59,7 @@ class MarkupBabelProcessor
     /**
      * Main function: render and return HTML-content.
      */
-    function rendme()
+    function rendme($args)
     {
         global $wgRequest;
         if (file_exists($this->Cache) && $wgRequest->getVal('action') !== 'purge')
@@ -69,7 +69,7 @@ class MarkupBabelProcessor
             return $this->format_error("No write permission to $this->Source");
         chdir($this->BaseDir);
         $mode = $this->Mode;
-        $res = $this->$mode();
+        $res = $this->$mode($args);
         file_put_contents($this->Cache, $res);
         return $res;
     }
@@ -176,7 +176,7 @@ EOT;
         return $this->generate_graphviz("fdp", "print");
     }
 
-    function plot()
+    function plot($args)
     {
         $blackList = array(
             'cd', 'call', 'exit', 'load', 'pause', 'print',
@@ -212,7 +212,7 @@ EOT;
             {
                 $res = preg_match('/^\s*(\d[\deEdDqQ\-\.]+)\s+(\d[eEdDqQ\.]*)\s*(#.*)?/', $line);
                 if ($res && $activedataset != "")
-                    $datasets[$activedataset]['src'] .=$line."\n";
+                    $datasets[$activedataset]['src'] .= $line."\n";
                 else
                     $src_filtered .= $line."\n";
             }
@@ -224,8 +224,13 @@ EOT;
         $outputpath = "{$this->Source}";
         if (wfIsWindows())
             $outputpath = str_replace("\\", "/", $outputpath);
+        $width = isset($args['width']) && $args['width'] > 0 ? intval($args['width']) : 640;
+        $height = isset($args['height']) && $args['height'] > 0 ? intval($args['height']) : $width/4*3;
+        $font = isset($args['font']) ? $args['font'] : 'Arial';
+        $font = '"'.addslashes($font).'"';
         $str = <<<EOT
-set terminal png
+set encoding utf8
+set terminal png size {$width}, {$height} font {$font}
 set output "{$outputpath}.png"
 {$src_filtered}
 EOT;
@@ -251,7 +256,8 @@ EOT;
             return $str;
         }
         $str = <<<EOT
-set terminal svg
+set encoding utf8
+set terminal svg size {$width}, {$height} font {$font}
 set output "{$outputpath}.svg"
 {$src_filtered}
 EOT;
@@ -263,9 +269,18 @@ EOT;
         if (file_exists("{$this->Source}.svg"))
         {
             $str =<<<EOT
-<object type="image/svg+xml" width="600" height="480" data="{$this->URI}{$this->Filename}.svg">
+<object type="image/svg+xml" width="{$width}" height="{$height}" data="{$this->URI}{$this->Filename}.svg">
 {$str}
 </object>
+EOT;
+        }
+        else
+        {
+            $err = file_get_contents("{$this->Source}.err");
+            $str .= <<<EOT
+<div class="error">
+$err
+</div>
 EOT;
         }
         return $str;

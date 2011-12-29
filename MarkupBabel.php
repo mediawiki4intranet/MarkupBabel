@@ -98,10 +98,10 @@ class MarkupBabel
             // Also enable standard MediaWiki's <math> tag when $wgUseTex is disabled
             $arr['math'] = 'amsmath';
         }
-        foreach ($arr as $strKey => $strVal)
+        foreach ($arr as $tag => $handler)
         {
-            $code = 'return wf_callback_generic($str,"'.$strVal.'");';
-            $wgParser->setHook($strKey, create_function('$str', $code));
+            $code = 'global $MarkupBabel; return $MarkupBabel->process($text, "'.$handler.'", $args);';
+            $wgParser->setHook($tag, create_function('$text, $args', $code));
         }
 
         $langArray = array(
@@ -142,10 +142,10 @@ class MarkupBabel
     }
 
     // Main entry point: generates path and call MarkupBabelProcessor
-    function process($strSrc, $strMode)
+    function process($strSrc, $strMode, $args)
     {
         global $wgScriptPath;
-        $strHash = md5($strSrc . $strMode);
+        $strHash = md5($strSrc . $strMode . var_export($args, true));
 
         $rel = '/' . $strMode . '/' . $strHash{0} . '/' . substr($strHash, 0, 2) . '/' . $strHash;
         $strDir = $this->BaseDir . $rel;
@@ -160,7 +160,7 @@ class MarkupBabel
         $strFile = $strDir . "/" . $strLocalFile;
 
         $processor = new MarkupBabelProcessor($strSrc, $strFile, $strMode, $strURI);
-        $html = $processor->rendme();
+        $html = $processor->rendme($args);
 
         // Real URL is substituted just before output, to allow using different script paths
         // and absolute URLs via hacking $wgScriptPath
