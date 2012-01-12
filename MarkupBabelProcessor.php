@@ -381,7 +381,7 @@ EOT;
             {
                 $size = wfGetSVGsize($this->Filename.'-'.$ipadded.'.svg');
                 $size = $size ? $size[3] : '';
-                $str .= "<object $size type=\"image/svg+xml\" data=\"{$this->URI}{$hash}.source-{$ipadded}.svg\"><img src=\"{$this->URI}{$pngfile}\" /></object>";
+                $str .= "<object $size type=\"image/svg+xml\" style=\"vertical-align: middle\" data=\"{$this->URI}{$hash}.source-{$ipadded}.svg\"><img src=\"{$this->URI}{$pngfile}\" /></object>";
             }
             else
             {
