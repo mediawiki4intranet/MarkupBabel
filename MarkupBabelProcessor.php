@@ -448,7 +448,7 @@ EOT;
         $graph->labelSize = 12;
         $graph->absValuesSize = 12;
         $graph->percValuesSize = 12;
-        $graph->graphBGColor = 'Aquamarine';
+        $graph->graphBGColor = '#c0f0ff';
         $graph->barColors = 'Gold';
         $graph->barBGColor = 'Azure';
         $graph->labelColor = 'black';
@@ -457,6 +457,7 @@ EOT;
         $graph->absValuesBGColor = 'Cornsilk';
         $graph->graphPadding = 15;
         $graph->graphBorder = '1px solid blue';
+        $graph->barBorder = '1px outset #ffea95';
 
         $lines = explode("\n", $this->Content);
         $labels = array();
