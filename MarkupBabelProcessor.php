@@ -226,11 +226,10 @@ EOT;
             $outputpath = str_replace("\\", "/", $outputpath);
         $width = isset($args['width']) && $args['width'] > 0 ? intval($args['width']) : 640;
         $height = isset($args['height']) && $args['height'] > 0 ? intval($args['height']) : $width/4*3;
-        $font = isset($args['font']) ? $args['font'] : 'Arial';
-        $font = '"'.addslashes($font).'"';
+        $font = isset($args['font']) ? ' font "'.addslashes($args['font']).'"' : '';
         $str = <<<EOT
 set encoding utf8
-set terminal png size {$width}, {$height} font {$font}
+set terminal png size {$width}, {$height}{$font}
 set output "{$outputpath}.png"
 {$src_filtered}
 EOT;
