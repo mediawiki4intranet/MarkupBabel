@@ -29,6 +29,7 @@ function wf_callback_geshi($str,$lang)
 settype($MarkupBabel, 'object');
 $wgExtensionFunctions[] = 'MarkupBabelRegister';
 $wgHooks['ArticleViewHeader'][] = 'MarkupBabel::AutoHighlight';
+$wgHooks['ArticlePurge'][] = 'MarkupBabel::ArticlePurge';
 
 function MarkupBabelRegister()
 {
@@ -206,5 +207,12 @@ class MarkupBabel
             $aFiles = array_merge($aFiles, $aSubFiles);
         }
         return $aFiles;
+    }
+
+    function ArticlePurge($page)
+    {
+        global $wgParser, $wgUser;
+        $wgParser->parse($page->getText(), $page->getTitle(), ParserOptions::newFromUser($wgUser));
+        return true;
     }
 }

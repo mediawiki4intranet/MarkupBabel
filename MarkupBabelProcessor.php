@@ -378,8 +378,16 @@ EOT;
             $ipadded = str_pad($i, 2, "0", STR_PAD_LEFT);
             if (file_exists($this->Filename.'-'.$ipadded.'.svg'))
             {
-                $size = wfGetSVGsize($this->Filename.'-'.$ipadded.'.svg');
-                $size = $size ? $size[3] : '';
+                if (class_exists('SVGMetadataExtractor'))
+                {
+                    $meta = SVGMetadataExtractor::getMetadata($this->Filename.'-'.$ipadded.'.svg');
+                    $size = ' width="'.ceil($meta['width']).'" height="'.ceil($meta['height']).'"';
+                }
+                else
+                {
+                    $size = wfGetSVGsize($this->Filename.'-'.$ipadded.'.svg');
+                    $size = $size ? $size[3] : '';
+                }
                 $str .= "<object $size type=\"image/svg+xml\" style=\"vertical-align: middle\" data=\"{$this->URI}{$hash}.source-{$ipadded}.svg\"><img src=\"{$this->URI}{$pngfile}\" /></object>";
             }
             else
