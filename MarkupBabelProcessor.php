@@ -95,20 +95,21 @@ class MarkupBabelProcessor
         $mapname = md5($this->BaseDir);
         $this->myexec("{$this->dotpath}$dot -Tsvg -o {$this->Source}.svg {$this->Source} 2>{$this->Source}.err");
 
-        // Set xlinks' targets to _parent
-        $svg = file_get_contents($this->Source.'.svg');
-        $svg = preg_replace('#<a([^<>]*xlink:href=[^<>]*[^/])(/?)>#is', '<a\1 target="_parent"\2>', $svg);
-        file_put_contents($this->Source.'.svg', $svg);
-
         $this->myexec("{$this->dotpath}$dot -Tcmap -o {$this->Source}.map {$this->Source}");
         $this->myexec("{$this->dotpath}$dot -Tpng  -o {$this->Source}.png {$this->Source}");
         if ($mode == "print")
             $this->myexec("{$this->dotpath}$dot -Tpng -Gdpi=196 -o {$this->Source}.print.png {$this->Source}");
-        if (!file_exists("{$this->Source}.png"))
+        if (!file_exists($this->Source.'.png') ||
+            !file_exists($this->Source.'.svg'))
         {
-            $err = file_get_contents("{$this->Source}.err");
+            $err = str_replace("\n", "<br />", file_get_contents("{$this->Source}.err"));
             return "<div class=\"error\">\n$err\n</div>";
         }
+
+        // Set xlinks' targets to _parent
+        $svg = file_get_contents($this->Source.'.svg');
+        $svg = preg_replace('#<a([^<>]*xlink:href=[^<>]*[^/])(/?)>#is', '<a\1 target="_parent"\2>', $svg);
+        file_put_contents($this->Source.'.svg', $svg);
 
         list($wh, $w, $h) = self::imagesizes("{$this->Source}.png");
         // Hack for Google Chrome to hide SVG scrollbars

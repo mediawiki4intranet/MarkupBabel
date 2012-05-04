@@ -26,16 +26,15 @@ function wf_callback_geshi($str,$lang)
     return $code;
 }
 
-settype($MarkupBabel, 'object');
 $wgExtensionFunctions[] = 'MarkupBabelRegister';
 $wgHooks['ArticleViewHeader'][] = 'MarkupBabel::AutoHighlight';
 $wgHooks['ArticlePurge'][] = 'MarkupBabel::ArticlePurge';
+$wgHooks['ParserFirstCallInit'][] = 'MarkupBabel::register';
 
 function MarkupBabelRegister()
 {
     global $MarkupBabel;
     $MarkupBabel = new MarkupBabel();
-    $MarkupBabel->register();
 }
 
 if (!isset($wgAutoHighlightExtensions))
@@ -67,9 +66,9 @@ class MarkupBabel
         $this->BaseDir = str_replace("\\", "/", $this->BaseDir);
     }
 
-    function register()
+    static function register($parser)
     {
-        global $wgParser, $wgUseTex;
+        global $wgUseTex;
         $arr = array (
             'amsmath'     => 'amsmath',
             'm'           => 'amsmath',
@@ -102,7 +101,7 @@ class MarkupBabel
         foreach ($arr as $tag => $handler)
         {
             $code = 'global $MarkupBabel; return $MarkupBabel->process($text, "'.$handler.'", $args);';
-            $wgParser->setHook($tag, create_function('$text, $args', $code));
+            $parser->setHook($tag, create_function('$text, $args', $code));
         }
 
         $langArray = array(
@@ -118,8 +117,10 @@ class MarkupBabel
         foreach ($langArray as $lang)
         {
             $code = 'return wf_callback_geshi($str,"'.$lang.'");';
-            $wgParser->setHook('code-'. $lang, create_function('$str', $code));
+            $parser->setHook('code-'. $lang, create_function('$str', $code));
         }
+
+        return true;
     }
 
     static function AutoHighlight($article, &$outputDone, &$useParserCache)
