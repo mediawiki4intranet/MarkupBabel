@@ -10,7 +10,6 @@
  */
 
 require_once("MarkupBabelProcessor.php");
-require_once('extensions/geshi/geshi.php');
 
 function wf_callback_generic($str,$mode)
 {
@@ -30,6 +29,7 @@ $wgExtensionFunctions[] = 'MarkupBabelRegister';
 $wgHooks['ArticleViewHeader'][] = 'MarkupBabel::AutoHighlight';
 $wgHooks['ArticlePurge'][] = 'MarkupBabel::ArticlePurge';
 $wgHooks['ParserFirstCallInit'][] = 'MarkupBabel::register';
+$wgAutoloadClasses['GeSHi'] = dirname(dirname(__FILE__)).'/SyntaxHighlight_GeSHi/geshi/geshi.php';
 
 function MarkupBabelRegister()
 {
