@@ -9,8 +9,6 @@
  * @license http://www.gnu.org/copyleft/gpl.html GNU General Public License 2.0 or later
  */
 
-require_once("MarkupBabelProcessor.php");
-
 function wf_callback_generic($str,$mode)
 {
     global $MarkupBabel;
@@ -30,6 +28,7 @@ $wgHooks['ArticleViewHeader'][] = 'MarkupBabel::AutoHighlight';
 $wgHooks['ArticlePurge'][] = 'MarkupBabel::ArticlePurge';
 $wgHooks['ParserFirstCallInit'][] = 'MarkupBabel::register';
 $wgAutoloadClasses['GeSHi'] = dirname(dirname(__FILE__)).'/SyntaxHighlight_GeSHi/geshi/geshi.php';
+$wgAutoloadClasses['MarkupBabelProcessor'] = dirname(__FILE__).'/MarkupBabelProcessor.php';
 
 function MarkupBabelRegister()
 {
