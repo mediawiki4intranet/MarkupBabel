@@ -9,12 +9,6 @@
  * @license http://www.gnu.org/copyleft/gpl.html GNU General Public License 2.0 or later
  */
 
-function wf_callback_generic($str,$mode)
-{
-    global $MarkupBabel;
-    return $MarkupBabel->process($str, $mode);
-}
-
 function wf_callback_geshi($str,$lang)
 {
     $geshi = new GeSHi($str, $lang);

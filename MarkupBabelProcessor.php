@@ -85,6 +85,12 @@ class MarkupBabelProcessor
         return array($r, $width, $height);
     }
 
+    function anchor_cur_title($m)
+    {
+        global $wgTitle;
+        return $m[1] . $wgTitle->getFullUrl() . '#' . Sanitizer::escapeId($m[2]);
+    }
+
     /**
      * Generate all kinds of Grapviz graphs (dot/neato/fdp/circo/...)
      */
@@ -104,8 +110,12 @@ class MarkupBabelProcessor
             return "<div class=\"error\">\n$err\n</div>";
         }
 
-        // Set xlinks' targets to _parent
         $svg = file_get_contents($this->Source.'.svg');
+        // Link #anchor_links to current title.
+        // FIXME: This can make incorrect links if you use the same graph on two different pages.
+        // But we'll care about it only when someone will do it.
+        $svg = preg_replace_callback('/(xlink:href=[\"\'])#([^<>\"\']*)/is', array($this, 'anchor_cur_title'), $svg);
+        // Set xlinks' targets to _parent
         $svg = preg_replace('#<a([^<>]*xlink:href=[^<>]*[^/])(/?)>#is', '<a\1 target="_parent"\2>', $svg);
         file_put_contents($this->Source.'.svg', $svg);
 
