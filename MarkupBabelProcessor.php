@@ -375,6 +375,14 @@ EOT;
                 return "Sorry, directive {$strBlack} is forbidden!";
         file_put_contents($this->Source.".tex", $tex);
 
+        if (!getenv('HOME'))
+        {
+            // Fix latex problem: when Apache is started during system startup
+            // and has no HOME in its environment, latex fails to cache fonts
+            // and non-english letters disappear.
+            global $wgTmpDirectory;
+            putenv("HOME=".$wgTmpDirectory);
+        }
         $this->myexec("{$this->texpath}latex --interaction=nonstopmode {$this->Source}.tex");
         $this->myexec("{$this->texpath}dvipng -gamma 1.5 -T tight {$this->Source}");
         $this->myexec("{$this->texpath}dvisvgm --exact -TS1.5 --no-fonts --bbox=min --output=\"%f-%p.svg\" {$this->Source}.dvi");
