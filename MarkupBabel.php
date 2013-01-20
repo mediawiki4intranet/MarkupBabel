@@ -203,7 +203,7 @@ class MarkupBabel
         return $aFiles;
     }
 
-    function ArticlePurge($page)
+    static function ArticlePurge($page)
     {
         global $wgParser, $wgUser;
         $wgParser->parse($page->getText(), $page->getTitle(), ParserOptions::newFromUser($wgUser));
