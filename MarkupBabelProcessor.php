@@ -265,7 +265,7 @@ EOT;
         }
         $str = <<<EOT
 set encoding utf8
-set terminal svg size {$width}, {$height} font {$font}
+set terminal svg size {$width}, {$height}{$font}
 set output "{$outputpath}.svg"
 {$src_filtered}
 EOT;
