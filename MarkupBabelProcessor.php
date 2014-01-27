@@ -97,12 +97,12 @@ class MarkupBabelProcessor
     function generate_graphviz($dot, $mode = "")
     {
         $mapname = md5($this->BaseDir);
-        $this->myexec("{$this->dotpath}$dot -Tsvg -o {$this->Source}.svg {$this->Source} 2>{$this->Source}.err");
+        wfShellExec("{$this->dotpath}$dot -Tsvg -o {$this->Source}.svg {$this->Source} >{$this->Source}.err 2>&1");
 
-        $this->myexec("{$this->dotpath}$dot -Tcmap -o {$this->Source}.map {$this->Source}");
-        $this->myexec("{$this->dotpath}$dot -Tpng  -o {$this->Source}.png {$this->Source}");
+        wfShellExec("{$this->dotpath}$dot -Tcmap -o {$this->Source}.map {$this->Source} >>{$this->Source}.err 2>&1");
+        wfShellExec("{$this->dotpath}$dot -Tpng  -o {$this->Source}.png {$this->Source} >>{$this->Source}.err 2>&1");
         if ($mode == "print")
-            $this->myexec("{$this->dotpath}$dot -Tpng -Gdpi=196 -o {$this->Source}.print.png {$this->Source}");
+            wfShellExec("{$this->dotpath}$dot -Tpng -Gdpi=196 -o {$this->Source}.print.png {$this->Source} >>{$this->Source}.err 2>&1");
         if (!file_exists($this->Source.'.png') ||
             !file_exists($this->Source.'.svg'))
         {
@@ -244,7 +244,7 @@ set output "{$outputpath}.png"
 EOT;
         file_put_contents($this->Source . ".plt", $str);
         $cmd = "{$this->gnuplotpath}gnuplot < {$this->Source}.plt 2>{$this->Source}.err";
-        $this->myexec($cmd);
+        wfShellExec($cmd);
         $filename = "{$this->Source}.png";
         usleep(100000);
         $resexists = file_exists("{$this->Source}.png");
@@ -270,7 +270,7 @@ set output "{$outputpath}.svg"
 {$src_filtered}
 EOT;
         file_put_contents($this->Source . ".plt2", $str);
-        $this->myexec("{$this->gnuplotpath}gnuplot {$this->Source}.plt2 2>{$this->Source}.err2");
+        wfShellExec("{$this->gnuplotpath}gnuplot {$this->Source}.plt2 2>{$this->Source}.err2");
         $str = <<<EOT
 <img src="{$this->URI}{$this->Filename}.png">
 EOT;
@@ -297,8 +297,8 @@ EOT;
     function pic_svg()
     {
         $opts = " --without-gui --export-area-drawing ";
-        $this->myexec("{$this->inkscapepath}inkscape $opts --export-plain-svg={$this->Source}.svg {$this->Source}");
-        $this->myexec("{$this->inkscapepath}inkscape $opts --export-png={$this->Source}.png {$this->Source} 2>{$this->Source}.err");
+        wfShellExec("{$this->inkscapepath}inkscape $opts --export-plain-svg={$this->Source}.svg {$this->Source} >{$this->Source}.err 2>&1");
+        wfShellExec("{$this->inkscapepath}inkscape $opts --export-png={$this->Source}.png {$this->Source} >>{$this->Source}.err 2>&1");
         if (!file_exists("{$this->Source}.png"))
         {
             $err = file_get_contents("{$this->Source}.err");
@@ -316,9 +316,9 @@ EOT;
     function umlgraph()
     {
         copy($this->Source, $this->Source.".java");
-        $this->myexec("umlgraph {$this->Source} png -outputencoding UTF-8 1>{$this->Source}.err 2>&1");
-        $this->myexec("umlgraph {$this->Source} svg -outputencoding UTF-8");
-        $this->myexec("umlgraph {$this->Source} dot -outputencoding UTF-8");
+        wfShellExec("umlgraph {$this->Source} png -outputencoding UTF-8 >{$this->Source}.err 2>&1");
+        wfShellExec("umlgraph {$this->Source} svg -outputencoding UTF-8 >>{$this->Source}.err 2>&1");
+        wfShellExec("umlgraph {$this->Source} dot -outputencoding UTF-8 >>{$this->Source}.err 2>&1");
         if (!file_exists("{$this->Source}.png"))
         {
             $err = file_get_contents("{$this->Source}.err");
@@ -341,9 +341,9 @@ copy "{$sequencefilename}";
 EOT;
         $this->Content = str_replace("\r", "", $this->Content);
         file_put_contents($this->Source, $this->Content);
-        $this->myexec("pic2plot -Tsvg {$this->Source} > {$this->Source}.svg 2>{$this->Source}.err");
-        $this->myexec("inkscape --without-gui --export-area-drawing  --export-plain-svg={$this->Source}.svg {$this->Filename}.svg");
-        $this->myexec("inkscape --without-gui --export-area-drawing  --export-png={$this->Source}.png {$this->Filename}.svg 2>{$this->Source}.err");
+        wfShellExec("pic2plot -Tsvg {$this->Source} > {$this->Source}.svg 2>{$this->Source}.err");
+        wfShellExec("inkscape --without-gui --export-area-drawing  --export-plain-svg={$this->Source}.svg {$this->Filename}.svg");
+        wfShellExec("inkscape --without-gui --export-area-drawing  --export-png={$this->Source}.png {$this->Filename}.svg 2>{$this->Source}.err2");
         if (!file_exists("{$this->Source}.png"))
         {
             $err = file_get_contents("{$this->Source}.err");
@@ -353,10 +353,10 @@ EOT;
 
     function umlet()
     {
-        $this->myexec("UMLet -action=convert -format=svg -filename={$this->Source}");
+        wfShellExec("UMLet -action=convert -format=svg -filename={$this->Source}");
         $opts = " --without-gui --export-area-drawing ";
-        $this->myexec("{$this->inkscapepath}inkscape $opts --export-plain-svg={$this->Source}.svg {$this->Filename}.svg");
-        $this->myexec("{$this->inkscapepath}inkscape $opts --export-png={$this->Source}.png {$this->Filename}.svg 2>{$this->Source}.err");
+        wfShellExec("{$this->inkscapepath}inkscape $opts --export-plain-svg={$this->Source}.svg {$this->Filename}.svg");
+        wfShellExec("{$this->inkscapepath}inkscape $opts --export-png={$this->Source}.png {$this->Filename}.svg 2>{$this->Source}.err");
         if (!file_exists("{$this->Source}.png"))
         {
             $err = file_get_contents("{$this->Source}.err");
@@ -383,9 +383,9 @@ EOT;
             global $wgTmpDirectory;
             putenv("HOME=".$wgTmpDirectory);
         }
-        $this->myexec("{$this->texpath}latex --interaction=nonstopmode {$this->Source}.tex");
-        $this->myexec("{$this->texpath}dvipng -gamma 1.5 -T tight {$this->Source}");
-        $this->myexec("{$this->texpath}dvisvgm --exact -TS1.5 --no-fonts --bbox=min --output=\"%f-%p.svg\" {$this->Source}.dvi");
+        wfShellExec("{$this->texpath}latex --interaction=nonstopmode {$this->Source}.tex >{$this->Source}.err 2>&1");
+        wfShellExec("{$this->texpath}dvipng -gamma 1.5 -T tight {$this->Source} >>{$this->Source}.err 2>&1");
+        wfShellExec("{$this->texpath}dvisvgm --exact -TS1.5 --no-fonts --bbox=min --output=\"%f-%p.svg\" {$this->Source}.dvi >>{$this->Source}.err 2>&1");
         $str = "";
         $hash = basename($this->Filename, ".source");
         $i = 1;
@@ -510,23 +510,5 @@ EOT;
         $res = str_replace("<td", "\n<td", $res);
         $res = str_replace("<tr", "\n<tr", $res);
         return $res;
-    }
-
-    function myexec($cmd)
-    {
-        if (wfIsWindows())
-        {
-            $shell = new COM('WScript.Shell');
-            $str = "cmd /c {$cmd}";
-            $shell->CurrentDirectory = "{$this->BaseDir}";
-            $shell->Run($str, 0, TRUE);
-        }
-        else
-        {
-            $str = $cmd;
-            $str = str_replace("/cygdrive/d", "d:", $str);
-            return exec($str);
-        }
-        return 0;
     }
 }
