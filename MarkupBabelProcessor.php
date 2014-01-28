@@ -233,10 +233,10 @@ EOT;
         $max_ymd = explode('-', $max);
         $years = intval($min_ymd[0]) != intval($max_ymd[0]);
         $ytics = array();
-        $i = 1;
+        $i = count($data);
         foreach ($data as $res => &$tasks)
         {
-            $ytics[] = '"'.addslashes($res).'" '.($i++);
+            $ytics[] = '"'.addslashes($res).'" '.($i--);
             ksort($tasks);
         }
         $lines = array(
@@ -253,7 +253,7 @@ EOT;
             'set palette model RGB defined (0 1.0 0.8 0.8, 1 1.0 0.8 1.0, 2 0.8 0.8 1.0, 3 0.8 1.0 1.0, 4 0.8 1.0 0.8, 5 1.0 1.0 0.8)',
             'unset colorbox',
         );
-        $i = 1;
+        $i = count($data);
         $j = 1;
         $plot = array();
         foreach ($data as $res => &$tasks)
@@ -263,7 +263,7 @@ EOT;
                 $lines[] = 'set object '.($j++).' rectangle from "'.$start.'", '.($i-0.2).
                     ' to "'.$task[1].'", '.($i+0.2).' fillcolor palette frac '.($task_idx[$task[0]] / (count($task_idx)-1)).' fillstyle solid 0.8';
             }
-            $i++;
+            $i--;
         }
         foreach ($task_idx as $task => $idx)
         {
