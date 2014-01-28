@@ -185,16 +185,108 @@ EOT;
         return $this->generate_graphviz("fdp", "print");
     }
 
-    function plot($args)
+    /**
+     * Simple Gantt-like charts using Gnuplot
+     *
+     * Syntax:
+     * <gantt [width=X height=Y]>
+     * RESOURCE DATE_BEGIN DAYS TASK
+     * ...
+     * </gantt>
+     *
+     * RESOURCE may not contain spaces
+     * DATE_BEGIN format is YYYY-MM-DD
+     * DAYS is a number
+     * TASK is task name, may contain spaces
+     */
+    function gantt($args)
+    {
+        $data = array();
+        $task_idx = array();
+        $min = $max = NULL;
+        $lines = explode("\n", $this->Content);
+        foreach ($lines as $line)
+        {
+            if (!preg_match('/^\s*([^\s"\']+)\s+(\d+-\d+-\d+)\s+(\d+)\s+(.*)$/s', $line, $m))
+            {
+                continue;
+            }
+            list($line, $res, $start, $days, $task) = $m;
+            $task = trim($task);
+            if ($min === NULL || $start < $min)
+            {
+                $min = $start;
+            }
+            $end = explode('-', $start);
+            $end = date('Y-m-d', mktime(0, 0, 0, $end[1], $end[2], $end[0]) + $days*86400);
+            if ($max === NULL || $end > $max)
+            {
+                $max = $end;
+            }
+            if (!isset($task_idx[$task]))
+            {
+                $task_idx[$task] = count($task_idx);
+            }
+            $data[$res][$start] = array($task, $end);
+        }
+        $min_ymd = explode('-', $min);
+        $max_ymd = explode('-', $max);
+        $years = intval($min_ymd[0]) != intval($max_ymd[0]);
+        $ytics = array();
+        $i = 1;
+        foreach ($data as $res => &$tasks)
+        {
+            $ytics[] = '"'.addslashes($res).'" '.($i++);
+            ksort($tasks);
+        }
+        $lines = array(
+            'set xdata time',
+            'set timefmt "%Y-%m-%d"',
+            'set format x "%d.%m'.($years ? '.%Y' : '').'"',
+            'set xrange ["'.$min.'":"'.$max.'"]',
+            'set autoscale x',
+            'set yrange [0.4:'.count($data).'.6]',
+            'set ytics ('.implode(', ', $ytics).')',
+            'set xtics auto',
+            'set key outside width +2',
+            'set grid xtics',
+            'set palette model RGB defined (0 1.0 0.8 0.8, 1 1.0 0.8 1.0, 2 0.8 0.8 1.0, 3 0.8 1.0 1.0, 4 0.8 1.0 0.8, 5 1.0 1.0 0.8)',
+            'unset colorbox',
+        );
+        $i = 1;
+        $j = 1;
+        $plot = array();
+        foreach ($data as $res => &$tasks)
+        {
+            foreach ($tasks as $start => $task)
+            {
+                $lines[] = 'set object '.($j++).' rectangle from "'.$start.'", '.($i-0.2).
+                    ' to "'.$task[1].'", '.($i+0.2).' fillcolor palette frac '.($task_idx[$task[0]] / (count($task_idx)-1)).' fillstyle solid 0.8';
+            }
+            $i++;
+        }
+        foreach ($task_idx as $task => $idx)
+        {
+            $plot[] = '-1 title "'.$task.'" with lines linecolor palette frac '.($idx / (count($task_idx)-1)).' linewidth 6';
+        }
+        $lines[] = 'plot '.implode(', ', $plot);
+        $this->Content = implode("\n", $lines);
+        return $this->plot($args, false);
+    }
+
+    function plot($args, $check = true)
     {
         $blackList = array(
             'cd', 'call', 'exit', 'load', 'pause', 'print',
             'pwd', 'quit', 'replot', 'reread', 'reset', 'save',
             'shell', 'system', 'test', 'update', '!', 'path', 'historysize', 'mouse', 'out', 'term', 'file', '\'/', '\'.','"'
         );
-        foreach($blackList as $strBlack)
-            if (stristr($this->Content, $strBlack) !== false)
-                return "Sorry, directive {$strBlack} is forbidden!";
+        if ($check)
+        {
+            foreach ($blackList as $strBlack)
+                if (stristr($this->Content, $strBlack) !== false)
+                    return "Sorry, directive {$strBlack} is forbidden!";
+        }
         $lines = explode("\n", $this->Content);
         $datasets = array();
         $src_filtered = "";

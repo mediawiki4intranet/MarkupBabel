@@ -85,6 +85,7 @@ class MarkupBabel
             'umlet'       => 'umlet',
             'umlgraph'    => 'umlgraph',
             'umlsequence' => 'umlsequence',
+            'gantt'       => 'gantt',
         );
         if (empty($wgUseTex))
         {
