@@ -205,6 +205,7 @@ EOT;
         $task_idx = array();
         $min = $max = NULL;
         $lines = explode("\n", $this->Content);
+        $xtics = array();
         foreach ($lines as $line)
         {
             if (!preg_match('/^\s*([^\s"\']+)\s+(\d+-\d+-\d+)\s+(\d+)\s+(.*)$/s', $line, $m))
@@ -227,6 +228,8 @@ EOT;
             {
                 $task_idx[$task] = count($task_idx);
             }
+            $xtics[$start] = true;
+            $xtics[$end] = true;
             $data[$res][$start] = array($task, $end);
         }
         $min_ymd = explode('-', $min);
@@ -247,7 +250,7 @@ EOT;
             'set autoscale x',
             'set yrange [0.4:'.count($data).'.6]',
             'set ytics ('.implode(', ', $ytics).')',
-            'set xtics auto',
+            'set xtics rotate by -90 ("'.implode('", "', array_keys($xtics)).'")',
             'set key outside width +2',
             'set grid xtics',
             'set palette model RGB defined (0 1.0 0.8 0.8, 1 1.0 0.8 1.0, 2 0.8 0.8 1.0, 3 0.8 1.0 1.0, 4 0.8 1.0 0.8, 5 1.0 1.0 0.8)',
