@@ -12,6 +12,9 @@
 function wf_callback_geshi($str,$lang)
 {
     $geshi = new GeSHi($str, $lang);
+    // Remove font override
+    $geshi->set_overall_style('');
+    $geshi->set_code_style('margin:0; padding:0; background:none; vertical-align:top;');
     $code = $geshi->parse_code();
     $code = preg_replace("/(^\s*<pre[^<>]*>\s*)&nbsp;\n|\n&nbsp;\s*(<\/pre>)/is", '\1\2', $code);
     return $code;
