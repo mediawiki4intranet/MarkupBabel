@@ -56,9 +56,10 @@ class MarkupBabel
 
     function MarkupBabel()
     {
-        global $IP, $wgScriptPath;
-
-        $this->BaseDir = "$IP/images/generated";
+        global $wgUploadDirectory;
+    
+        $this->generatedSubDir = 'generated';
+        $this->BaseDir = "$wgUploadDirectory/{$this->generatedSubDir}";
         $this->BaseDir = str_replace("\\", "/", $this->BaseDir);
     }
 
@@ -143,7 +144,7 @@ class MarkupBabel
     // Main entry point: generates path and call MarkupBabelProcessor
     function process($strSrc, $strMode, $args)
     {
-        global $wgScriptPath;
+        global $wgUploadPath;
         $strHash = md5($strSrc . $strMode . var_export($args, true));
 
         $rel = '/' . $strMode . '/' . $strHash{0} . '/' . substr($strHash, 0, 2) . '/' . $strHash;
@@ -163,7 +164,7 @@ class MarkupBabel
 
         // Real URL is substituted just before output, to allow using different script paths
         // and absolute URLs via hacking $wgScriptPath
-        $html = str_replace($strURI, "$wgScriptPath/images/generated$rel/", $html);
+        $html = str_replace($strURI, "{$wgUploadPath}/{$this->generatedSubDir}$rel/", $html);
         return $html;
     }
 
