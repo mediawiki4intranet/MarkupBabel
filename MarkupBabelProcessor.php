@@ -191,12 +191,13 @@ EOT;
      * Syntax:
      * <gantt [width=X height=Y]>
      * RESOURCE DATE_BEGIN DAYS TASK
+     * RESOURCE DATE_BEGIN DATE_END TASK
      * ...
      * </gantt>
      *
      * RESOURCE may not contain spaces
-     * DATE_BEGIN format is YYYY-MM-DD
-     * DAYS is a number
+     * DATE_BEGIN and DATE_END format is YYYY-MM-DD
+     * DAYS is a number (duration)
      * TASK is task name, may contain spaces
      */
     function gantt($args)
@@ -208,18 +209,28 @@ EOT;
         $xtics = array();
         foreach ($lines as $line)
         {
-            if (!preg_match('/^\s*([^\s"\']+)\s+(\d+-\d+-\d+)\s+(\d+)\s+(.*)$/s', $line, $m))
+            if (!preg_match('/^\s*([^\s"\']+)\s+(\d+-\d+-\d+)\s+(\d+(?:-\d+-\d+)?)\s+(.*)$/s', $line, $m))
             {
                 continue;
             }
             list($line, $res, $start, $days, $task) = $m;
             $task = trim($task);
+            $start = explode('-', $start);
+            $start = sprintf("%04d-%02d-%02d", $start[0], $start[1], $start[2]);
             if ($min === NULL || $start < $min)
             {
                 $min = $start;
             }
-            $end = explode('-', $start);
-            $end = date('Y-m-d', mktime(0, 0, 0, $end[1], $end[2], $end[0]) + $days*86400);
+            if (strpos($days, '-'))
+            {
+                $end = explode('-', $days);
+                $end = sprintf("%04d-%02d-%02d", $end[0], $end[1], $end[2]);
+            }
+            else
+            {
+                $end = explode('-', $start);
+                $end = date('Y-m-d', mktime(0, 0, 0, $end[1], $end[2], $end[0]) + $days*86400);
+            }
             if ($max === NULL || $end > $max)
             {
                 $max = $end;
