@@ -489,21 +489,34 @@ EOT;
             global $wgTmpDirectory;
             putenv("HOME=".$wgTmpDirectory);
         }
-        wfShellExec("{$this->texpath}latex --interaction=nonstopmode {$this->Source}.tex >{$this->Source}.err 2>&1");
-        wfShellExec("{$this->texpath}dvipng -gamma 1.5 -T tight {$this->Source} >>{$this->Source}.err 2>&1");
-        wfShellExec("{$this->texpath}dvisvgm --exact -TS1.5 --no-fonts --bbox=min --output=\"%f-%p.svg\" {$this->Source}.dvi >>{$this->Source}.err 2>&1");
+        $scmd = "{$this->texpath}latex --interaction=nonstopmode {$this->Source}.tex >{$this->Source}.err 2>&1";
+        wfShellExec($scmd);
+        $scmd = "{$this->texpath}dvipng -gamma 1.5 -T tight {$this->Source} >>{$this->Source}.err 2>&1";
+        wfShellExec($scmd);
+        $scmd = "{$this->texpath}dvisvgm --exact -TS1.5 --page=1- --no-fonts --bbox=min --output=\"%f-%p.svg\" {$this->Source}.dvi >>{$this->Source}.err 2>&1";
+        wfShellExec($scmd);
         $str = "";
         $hash = basename($this->Filename, ".source");
         $i = 1;
         foreach (glob("{$this->BaseDir}/{$hash}*.png") as $pngfile)
         {
             $pngfile = basename($pngfile);
-            $ipadded = str_pad($i, 2, "0", STR_PAD_LEFT);
-            if (file_exists($this->Filename.'-'.$ipadded.'.svg'))
+            $svgfilename = null;
+            $svgfilename_ = $this->Filename.'-'. str_pad($i, 2, "0", STR_PAD_LEFT) .'.svg';
+            if (file_exists($svgfilename_ )){
+                $svgfilename = $svgfilename_;    
+            }
+
+            $svgfilename_ = $this->Filename.'-'. str_pad($i, 1, "0", STR_PAD_LEFT) .'.svg';
+            if (file_exists($svgfilename_ )){
+                $svgfilename = $svgfilename_;    
+            }
+
+            if ($svgfilename)
             {
                 if (class_exists('SVGMetadataExtractor'))
                 {
-                    $meta = SVGMetadataExtractor::getMetadata($this->Filename.'-'.$ipadded.'.svg');
+                    $meta = SVGMetadataExtractor::getMetadata($svgfilename);
                     $size = ' width="'.ceil($meta['width']).'" height="'.ceil($meta['height']).'"';
                 }
                 else
@@ -511,7 +524,7 @@ EOT;
                     $size = wfGetSVGsize($this->Filename.'-'.$ipadded.'.svg');
                     $size = $size ? $size[3] : '';
                 }
-                $str .= "<object $size type=\"image/svg+xml\" style=\"vertical-align: middle\" data=\"{$this->URI}{$hash}.source-{$ipadded}.svg\"><img src=\"{$this->URI}{$pngfile}\" /></object>";
+                $str .= "<object $size type=\"image/svg+xml\" style=\"vertical-align: middle\" data=\"{$this->URI}{$svgfilename}\"><img src=\"{$this->URI}{$pngfile}\" /></object>";
             }
             else
             {
