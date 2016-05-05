@@ -21,6 +21,8 @@ class MarkupBabelProcessor
 
     function MarkupBabelProcessor($content, $path, $mode, $uri)
     {
+        global $wgUploadDirectory;
+
         $this->Content = $content;
         $this->Source = $path;
         $this->Filename = basename($path);
@@ -33,16 +35,12 @@ class MarkupBabelProcessor
         $this->gnuplotpath = "";
         $this->texpath = "";
         $this->inkscapepath = "";
-        if (wfIsWindows())
-        {
-            global $IP;
-            $this->dotpath = realpath($IP."/../../app/graphviz/bin") . "/";
-            $this->gnuplotpath = realpath($IP."/../../app/gnuplot/bin")."/p";
-            //$this->texpath = realpath($IP."/../../app/tex/miktex/bin") . "/";
-            $this->texpath = realpath($IP."/../../app/xetex/bin/win32") . "/";
-            $this->inkscapepath = realpath($IP."/../../app/inkscape") . "/";
-            $this->umlgraphpath = realpath($IP."/../../app/umlgraph/bin" . "/");
-        }
+        $this->cacheHomeDir = "$wgUploadDirectory/cachehome";
+
+        $oldumask = umask(0);
+        if (!file_exists($this->cacheHomeDir))
+            mkdir($this->cacheHomeDir, 0777, true);
+        umask($oldumask);
     }
 
     /**
@@ -481,14 +479,12 @@ EOT;
                 return "Sorry, directive {$strBlack} is forbidden!";
         file_put_contents($this->Source.".tex", $tex);
 
-        if (!getenv('HOME'))
-        {
-            // Fix latex problem: when Apache is started during system startup
-            // and has no HOME in its environment, latex fails to cache fonts
-            // and non-english letters disappear.
-            global $wgTmpDirectory;
-            putenv("HOME=".$wgTmpDirectory);
-        }
+        // Fix latex problem:
+        // In most distro apache have no writeable HOME
+        // so latex fails to build and cache fonts
+        putenv("HOME={$this->cacheHomeDir}");
+        $env_path=getenv('PATH');
+        putenv('PATH={$env_path}:{$this->texpath}:/usr/bin');
         $scmd = "{$this->texpath}latex --interaction=nonstopmode {$this->Source}.tex >{$this->Source}.err 2>&1";
         wfShellExec($scmd);
         $scmd = "{$this->texpath}dvipng -gamma 1.5 -T tight {$this->Source} >>{$this->Source}.err 2>&1";
