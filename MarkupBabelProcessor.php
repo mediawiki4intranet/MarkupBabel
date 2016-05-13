@@ -491,9 +491,15 @@ EOT;
         // Fix latex problem:
         // In most distro apache have no writeable HOME
         // so latex fails to build and cache fonts
-        putenv("HOME={$this->cacheHomeDir}");
-        $env_path=getenv('PATH');
-        putenv('PATH={$env_path}:{$this->texpath}:/usr/bin');
+        if (!getenv('HOME') || !is_writeable(getenv('HOME')))
+        {
+            // Fix latex problem: when Apache is started during system startup
+            // and has no HOME in its environment, latex fails to cache fonts
+            // and non-english letters disappear.
+            //global $wgTmpDirectory;
+            //putenv("HOME=".$wgTmpDirectory);
+            putenv("HOME={$this->cacheHomeDir}");
+        }
         $scmd = "{$this->texpath}latex --interaction=nonstopmode {$this->Source}.tex >{$this->Source}.err 2>&1";
         wfShellExec($scmd);
         $scmd = "{$this->texpath}dvipng -gamma 1.5 -T tight {$this->Source} >>{$this->Source}.err 2>&1";
