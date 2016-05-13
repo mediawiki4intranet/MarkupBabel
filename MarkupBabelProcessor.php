@@ -488,16 +488,12 @@ EOT;
                 return "Sorry, directive {$strBlack} is forbidden!";
         file_put_contents($this->Source.".tex", $tex);
 
-        // Fix latex problem:
-        // In most distro apache have no writeable HOME
-        // so latex fails to build and cache fonts
+        // In most distro apache has HOME, but it's not writable
         if (!getenv('HOME') || !is_writeable(getenv('HOME')))
         {
             // Fix latex problem: when Apache is started during system startup
             // and has no HOME in its environment, latex fails to cache fonts
             // and non-english letters disappear.
-            //global $wgTmpDirectory;
-            //putenv("HOME=".$wgTmpDirectory);
             putenv("HOME={$this->cacheHomeDir}");
         }
         $scmd = "{$this->texpath}latex --interaction=nonstopmode {$this->Source}.tex >{$this->Source}.err 2>&1";
