@@ -35,6 +35,15 @@ class MarkupBabelProcessor
         $this->gnuplotpath = "";
         $this->texpath = "";
         $this->inkscapepath = "";
+        if (wfIsWindows())
+        {
+            global $IP;
+            $this->dotpath = realpath($IP."/../../app/graphviz/bin") . "/";
+            $this->gnuplotpath = realpath($IP."/../../app/gnuplot/bin")."/p";
+            $this->texpath = realpath($IP."/../../app/xetex/bin/win32") . "/";
+            $this->inkscapepath = realpath($IP."/../../app/inkscape") . "/";
+            $this->umlgraphpath = realpath($IP."/../../app/umlgraph/bin" . "/");
+        }
         $this->cacheHomeDir = "$wgUploadDirectory/cachehome";
 
         $oldumask = umask(0);
