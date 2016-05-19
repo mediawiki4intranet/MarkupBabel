@@ -56,10 +56,9 @@ class MarkupBabel
 {
     var $BaseDir = "";
 
-    function MarkupBabel()
+    function __construct()
     {
         global $wgUploadDirectory;
-    
         $this->generatedSubDir = 'generated';
         $this->BaseDir = "$wgUploadDirectory/{$this->generatedSubDir}";
         $this->BaseDir = str_replace("\\", "/", $this->BaseDir);
