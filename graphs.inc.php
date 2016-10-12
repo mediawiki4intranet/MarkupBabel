@@ -145,7 +145,7 @@
 
     function build_bar($value, $width, $height, $color) {
       $title = $this->absValuesPrefix . $value . $this->absValuesSuffix;
-      $bg = eregi('\.(jpg|jpeg|jpe|gif|png)$', $color) ? 'background' : 'bgcolor';
+      $bg = preg_match('/\.(jpg|jpeg|jpe|gif|png)$/is', $color) ? 'background' : 'bgcolor';
       $bar = '<table border=0 cellspacing=0 cellpadding=0><tr>';
       $bar .= '<td style="' . $this->cssBAR . '" ' . $bg . '="' . $color . '"';
       $bar .= ($value != '') ? ' title="' . $title . '">' : '>';

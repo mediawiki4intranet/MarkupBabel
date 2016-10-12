@@ -621,7 +621,7 @@ EOT;
                 $value = $terms[sizeof($terms)-1];
                 unset($terms[sizeof($terms)-1]);
                 $text = join(' ', $terms);
-                $parserOutput = $wgParser->parse($text, $wgTitle, $this->parserOptions);
+                $parserOutput = $wgParser->parse($text, $wgTitle, $this->parserOptions, true, false);
                 $label = str_replace("<p>", "", str_replace("</p>", "", $parserOutput->mText));
                 $label = str_replace("\r", "", $label);
                 $label = str_replace("\n", "", $label);
