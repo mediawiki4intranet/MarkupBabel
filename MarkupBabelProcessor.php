@@ -34,14 +34,12 @@ class MarkupBabelProcessor
         $this->dotpath = "";
         $this->gnuplotpath = "";
         $this->texpath = "";
-        $this->inkscapepath = "";
         if (wfIsWindows())
         {
             global $IP;
             $this->dotpath = realpath($IP."/../../app/graphviz/bin") . "/";
             $this->gnuplotpath = realpath($IP."/../../app/gnuplot/bin")."/p";
             $this->texpath = realpath($IP."/../../app/xetex/bin/win32") . "/";
-            $this->inkscapepath = realpath($IP."/../../app/inkscape") . "/";
             $this->umlgraphpath = realpath($IP."/../../app/umlgraph/bin" . "/");
         }
         $this->cacheHomeDir = "$wgUploadDirectory/cachehome";
@@ -407,17 +405,25 @@ EOT;
         return $str;
     }
 
+    protected function render_svg($filename, $output, $err)
+    {
+        global $wgSVGConverterPath;
+        $command = 'rsvg-convert -f png -o '.wfEscapeShellArg($output).' '.wfEscapeShellArg($filename).
+            ($err ? ' &> '.wfEscapeShellArg($err) : '');
+        if ($wgSVGConverterPath)
+            $command = wfEscapeShellArg("$wgSVGConverterPath/") . $command;
+        wfShellExec($command);
+        return file_exists($output) && filesize($output) > 0;
+    }
+
     function pic_svg()
     {
-        $opts = " --without-gui --export-area-drawing ";
-        wfShellExec("{$this->inkscapepath}inkscape $opts --export-plain-svg={$this->Source}.svg {$this->Source} >{$this->Source}.err 2>&1");
-        wfShellExec("{$this->inkscapepath}inkscape $opts --export-png={$this->Source}.png {$this->Source} >>{$this->Source}.err 2>&1");
-        if (!file_exists("{$this->Source}.png"))
+        if (!$this->render_svg($this->Source, $this->Source.'.png', $this->Source.'.err'))
         {
-            $err = file_get_contents("{$this->Source}.err");
+            $err = file_get_contents($this->Source.'.err');
             return "<div class=\"error\">\n$err\n</div>";
         }
-        list($wh) = self::imagesizes("{$this->Source}.png");
+        list($wh) = self::imagesizes($this->Source.'.png');
         $str = <<<EOT
 <a href="{$this->URI}{$this->Filename}.svg">
 <img $wh src="{$this->URI}{$this->Filename}.png">
@@ -455,24 +461,21 @@ EOT;
         $this->Content = str_replace("\r", "", $this->Content);
         file_put_contents($this->Source, $this->Content);
         wfShellExec("pic2plot -Tsvg {$this->Source} > {$this->Source}.svg 2>{$this->Source}.err");
-        wfShellExec("inkscape --without-gui --export-area-drawing  --export-plain-svg={$this->Source}.svg {$this->Filename}.svg");
-        wfShellExec("inkscape --without-gui --export-area-drawing  --export-png={$this->Source}.png {$this->Filename}.svg 2>{$this->Source}.err2");
-        if (!file_exists("{$this->Source}.png"))
+        if (!file_exists($this->Source.'.svg') || !filesize($this->Source.'.svg') ||
+            !$this->render_svg($this->Source.'.svg', $this->Source.'.png', $this->Source.'.err'))
         {
-            $err = file_get_contents("{$this->Source}.err");
+            $err = file_get_contents($this->Source.'.err');
             return "<div class=\"error\">\n$err\n</div>";
         }
     }
 
     function umlet()
     {
-        wfShellExec("UMLet -action=convert -format=svg -filename={$this->Source}");
-        $opts = " --without-gui --export-area-drawing ";
-        wfShellExec("{$this->inkscapepath}inkscape $opts --export-plain-svg={$this->Source}.svg {$this->Filename}.svg");
-        wfShellExec("{$this->inkscapepath}inkscape $opts --export-png={$this->Source}.png {$this->Filename}.svg 2>{$this->Source}.err");
-        if (!file_exists("{$this->Source}.png"))
+        wfShellExec("UMLet -action=convert -format=svg -filename={$this->Source} &> {$this->Source}.err");
+        if (!file_exists($this->Source.'.svg') || !filesize($this->Source.'.svg') ||
+            !$this->render_svg($this->Source.'.svg', $this->Source.'.png', $this->Source.'.err'))
         {
-            $err = file_get_contents("{$this->Source}.err");
+            $err = file_get_contents($this->Source.'.err');
             return "<div class=\"error\">\n$err\n</div>";
         }
         $str = "<a href=\"{$this->URI}{$this->Filename}.svg\"><img src=\"{$this->URI}{$this->Filename}.png\"></a>";
