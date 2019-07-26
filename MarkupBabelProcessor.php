@@ -33,7 +33,7 @@ class MarkupBabelProcessor
         $this->parserOptions = new ParserOptions();
         $this->dotpath = "";
         $this->gnuplotpath = "";
-        $this->texpath = "";
+        $this->texpath = "/usr/bin/";
         if (wfIsWindows())
         {
             global $IP;
