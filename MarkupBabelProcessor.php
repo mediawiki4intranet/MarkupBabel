@@ -330,7 +330,7 @@ EOT;
             }
             else
             {
-                $res = preg_match('/^\s*(\d[\deEdDqQ\-\.]+)\s*(\d[eEdDqQ\.]*)\s*(#.*)?/', $line);
+                $res = preg_match('/^\s*(\d[\deEdDqQ\-\.]*)\s*(\d[eEdDqQ\.]*)\s*(#.*)?/', $line);
                 if ($res && $activedataset != "")
                     $datasets[$activedataset]['src'] .= $line."\n";
                 else
