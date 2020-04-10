@@ -26,6 +26,7 @@ $wgExtensionFunctions[] = 'MarkupBabelRegister';
 $wgHooks['ArticleViewHeader'][] = 'MarkupBabel::AutoHighlight';
 $wgHooks['ArticlePurge'][] = 'MarkupBabel::ArticlePurge';
 $wgHooks['ParserFirstCallInit'][] = 'MarkupBabel::register';
+$wgHooks['LanguageGetMagic'][] = 'MarkupBabel::languageGetMagic';
 $wgAutoloadClasses['GeSHi'] = dirname(dirname(__FILE__)).'/SyntaxHighlight_GeSHi/geshi/geshi.php';
 $wgAutoloadClasses['MarkupBabelProcessor'] = dirname(__FILE__).'/MarkupBabelProcessor.php';
 
@@ -62,6 +63,12 @@ class MarkupBabel
         $this->generatedSubDir = 'generated';
         $this->BaseDir = "$wgUploadDirectory/{$this->generatedSubDir}";
         $this->BaseDir = str_replace("\\", "/", $this->BaseDir);
+    }
+
+    static function languageGetMagic(&$magicWords, $langCode = 'en')
+    {
+        $magicWords['graph'] = [ 0, 'graph' ];
+        return true;
     }
 
     static function register($parser)
@@ -102,6 +109,14 @@ class MarkupBabel
             $code = 'global $MarkupBabel; return $MarkupBabel->process($text, "'.$handler.'", $args);';
             $parser->setHook($tag, create_function('$text, $args', $code));
         }
+        $parser->setFunctionHook('graph', function($parser, $args)
+        {
+            global $MarkupBabel;
+            $args = func_get_args();
+            array_shift($args);
+            $text = implode('|', $args);
+            return $parser->insertStripItem($MarkupBabel->process($text, 'graph', []));
+        });
 
         $langArray = array(
             "actionscript","ada","apache","asm","asp",
