@@ -303,7 +303,9 @@ EOT;
         if ($check)
         {
             foreach ($blackList as $strBlack)
-                if (stristr($this->Content, $strBlack) !== false)
+                if (preg_match('/^[a-z]+$/is', $strBlack)
+                    ? preg_match('/\b'.$strBlack.'\b/is', $this->Content)
+                    : stristr($this->Content, $strBlack) !== false)
                     return "Sorry, directive {$strBlack} is forbidden!";
         }
         $lines = explode("\n", $this->Content);
@@ -326,12 +328,11 @@ EOT;
                     'src'   => '',
                 );
                 $datasets[$datasetname] =$dataset;
-                $activedataset =$datasetname;
+                $activedataset = $datasetname;
             }
             else
             {
-                $res = preg_match('/^\s*(\d[\deEdDqQ\-\.]*)\s*(\d[eEdDqQ\.]*)\s*(#.*)?/', $line);
-                if ($res && $activedataset != "")
+                if ($activedataset != "")
                     $datasets[$activedataset]['src'] .= $line."\n";
                 else
                     $src_filtered .= $line."\n";
