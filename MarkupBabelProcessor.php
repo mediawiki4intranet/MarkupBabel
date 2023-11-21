@@ -302,10 +302,11 @@ EOT;
         );
         if ($check)
         {
+            $checked = preg_replace('/\btics\s+out\b/is', '', $this->Content);
             foreach ($blackList as $strBlack)
                 if (preg_match('/^[a-z]+$/is', $strBlack)
-                    ? preg_match('/\b'.$strBlack.'\b/is', $this->Content)
-                    : stristr($this->Content, $strBlack) !== false)
+                    ? preg_match('/\b'.$strBlack.'\b/is', $checked)
+                    : stristr($checked, $strBlack) !== false)
                     return "Sorry, directive {$strBlack} is forbidden!";
         }
         $lines = explode("\n", $this->Content);
